@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b61a8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>KI-Seepferdchen – Steuerung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#0b61a8; --deep:#062a5c; --sky:#e8f6ff; --ink:#0d2346; --muted:#5a7393; --line:#d4e6f5;
+  --ok:#14864a; --warn:#b26b00; --err:#c0392b; --card:#fff; --bg:#f2f9ff;
+  --font:'Fredoka','Trebuchet MS',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:16px;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+header{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#1aa0e0,#0b61a8);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,30,80,.2)}
+header .logo{width:34px;flex:0 0 auto}
+header h1{font-size:19px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:13px;font-weight:600;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.2);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.pill i{width:9px;height:9px;border-radius:50%;background:#ffc94d;display:inline-block}
+.pill.connected i{background:#5dff9c;box-shadow:0 0 6px #5dff9c}
+.pill.offline i{background:#ff8a80}
+main{padding:14px 14px 20px;max-width:720px;margin:0 auto}
+h2{font-size:17px;font-weight:700;margin:18px 2px 10px;color:var(--deep)}
+h2:first-child{margin-top:4px}
+.card{background:var(--card);border-radius:18px;padding:14px;box-shadow:0 2px 10px rgba(0,40,90,.07);border:1px solid var(--line)}
+.muted{color:var(--muted);font-size:14px}
+.row{display:flex;gap:10px;align-items:center}
+.grow{flex:1;min-width:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:14px;font-weight:600;background:var(--sky);color:var(--blue);
+  min-height:48px;transition:transform .1s}
+.btn:active{transform:scale(.96)}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.big{font-size:20px;min-height:64px;border-radius:18px}
+.btn.warn{background:#fff1e0;color:#a05a00}
+.btn.danger{background:#ffe9e7;color:var(--err)}
+.btn.small{padding:8px 12px;min-height:40px;font-size:14px;border-radius:12px}
+.btn:disabled{opacity:.4}
+.btn.block{width:100%}
+input[type=text],input[type=number],textarea{width:100%;border:2px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff;font-size:17px;outline:none}
+input:focus,textarea:focus{border-color:#4fb3ef}
+textarea{min-height:90px;resize:vertical}
+label.lbl{display:block;font-size:14px;font-weight:600;color:var(--muted);margin:10px 2px 6px}
+
+/* Tabs */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  box-shadow:0 -2px 12px rgba(0,40,90,.08)}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:12px;font-size:12px;font-weight:600;color:var(--muted)}
+nav button span{font-size:22px;line-height:1.1}
+nav button.on{background:var(--sky);color:var(--blue)}
+
+/* Ansicht-Umschalter */
+.seg{display:flex;background:var(--sky);border-radius:16px;padding:4px;gap:4px}
+.seg button{flex:1;padding:10px 4px;border-radius:12px;font-weight:600;color:var(--blue);font-size:15px}
+.seg button.on{background:#fff;box-shadow:0 2px 6px rgba(0,40,90,.12);color:var(--deep)}
+
+/* aktuelle Frage */
+.qprev{display:flex;gap:12px;align-items:center}
+.qthumb{width:84px;height:64px;border-radius:12px;background:#eaf6ff center/cover no-repeat;flex:0 0 auto;display:grid;place-items:center;font-size:26px;overflow:hidden}
+.qthumb img{width:100%;height:100%;object-fit:cover}
+.qtxt{font-weight:600;font-size:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.navbtns{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;margin-top:12px}
+
+/* Spieler-Kacheln */
+.pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.ptile{position:relative;background:#fff;border-radius:18px;padding:12px 10px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  border:3px solid var(--c);box-shadow:0 3px 0 var(--c);transition:transform .12s;text-align:center;width:100%}
+.ptile:active{transform:translateY(2px) scale(.97);box-shadow:0 1px 0 var(--c)}
+.ptile .av{width:62px;height:62px;border-radius:50%;background:var(--c);display:grid;place-items:center;font-size:34px;overflow:hidden;box-shadow:inset 0 0 0 3px rgba(255,255,255,.7)}
+.ptile .av img{width:100%;height:100%;object-fit:cover}
+.ptile .av img.fit{object-fit:contain;background:#fff;padding:6%}
+.ptile .nm{font-weight:700;font-size:16px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptile .pts{display:flex;align-items:center;gap:6px;font-weight:700;font-size:20px}
+.ptile .plus{position:absolute;top:8px;right:8px;background:var(--c);color:#fff;font-weight:700;border-radius:99px;padding:2px 9px;font-size:15px}
+.ptile .minus{position:absolute;top:6px;left:6px;width:34px;height:34px;border-radius:50%;background:#f1f5f9;color:#64748b;font-weight:700;font-size:20px;line-height:1;display:grid;place-items:center}
+.ptile.bump{animation:tbump .45s cubic-bezier(.3,1.7,.5,1)}
+@keyframes tbump{40%{transform:scale(1.08)}}
+.pearl{width:16px;height:16px;border-radius:50%;display:inline-block;background:radial-gradient(circle at 34% 30%,#fff 0 14%,#fff4dc 30%,#f2d6a6 70%,#d9b47a 100%);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+
+/* Spieler bearbeiten */
+.stepper{display:flex;align-items:center;gap:12px;justify-content:center}
+.stepper b{font-size:36px;min-width:56px;text-align:center}
+.stepper .btn{width:60px;font-size:26px}
+.pedit{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.pedit:last-child{border-bottom:0}
+.pedit .av{width:72px;height:72px;border-radius:50%;background:var(--c);display:grid;place-items:center;font-size:38px;overflow:hidden;flex:0 0 auto;position:relative;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--c)}
+.pedit .av img{width:100%;height:100%;object-fit:cover}
+.pedit .av img.fit{object-fit:contain;background:#fff;padding:6%}
+.pedit .av .cam{position:absolute;right:-2px;bottom:-2px;background:#fff;border-radius:50%;width:26px;height:26px;display:grid;place-items:center;font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sw{width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.sw.on{box-shadow:0 0 0 3px var(--ink)}
+.emojis{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.emojis button{font-size:20px;width:34px;height:34px;border-radius:10px}
+.emojis button.on{background:var(--sky);box-shadow:inset 0 0 0 2px var(--blue)}
+.linkbtn{color:var(--blue);font-weight:600;font-size:14px;padding:6px 0}
+
+/* Fragen */
+.qitem{display:flex;gap:10px;align-items:center;padding:10px;border-radius:14px;border:2px solid transparent}
+.qitem + .qitem{margin-top:6px}
+.qitem.cur{border-color:#4fb3ef;background:#f3faff}
+.qitem .num{width:28px;height:28px;border-radius:50%;background:var(--sky);color:var(--blue);font-weight:700;display:grid;place-items:center;font-size:14px;flex:0 0 auto}
+.qitem .qthumb{width:64px;height:50px}
+.qitem .qtxt{font-size:15px;-webkit-line-clamp:2}
+.qbtns{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.qbtns .btn{padding:6px 10px;min-height:36px;font-size:14px;border-radius:10px}
+.imgpick{border:2px dashed #9cc9ea;border-radius:16px;min-height:150px;display:grid;place-items:center;background:#f6fbff;overflow:hidden;position:relative;width:100%;color:var(--muted);font-weight:600}
+.imgpick img{width:100%;max-height:240px;object-fit:contain;display:block}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px}
+.toggle input{width:52px;height:30px;appearance:none;-webkit-appearance:none;background:#cbd5e1;border-radius:99px;position:relative;transition:background .2s;flex:0 0 auto}
+.toggle input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle input:checked{background:#36C275}
+.toggle input:checked::after{left:25px}
+
+/* Verbindungsbildschirm */
+.connect{text-align:center;padding-top:20px}
+.connect .horse{width:110px;margin:0 auto 8px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+.codein{font-size:40px !important;text-align:center;letter-spacing:.3em;font-weight:700;max-width:240px;margin:8px auto}
+.banner{background:#fff6e0;border:1px solid #ffd98a;color:#7a4b00;border-radius:14px;padding:10px 12px;font-size:14px;margin-bottom:12px;display:flex;gap:10px;align-items:center}
+.banner.err{background:#ffeceb;border-color:#ffb4ad;color:#8a1f14}
+#toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--deep);color:#fff;padding:10px 16px;border-radius:14px;
+  font-weight:600;font-size:15px;opacity:0;transition:all .3s;z-index:50;max-width:90vw;text-align:center;pointer-events:none}
+#toast.on{opacity:1;transform:translateX(-50%)}
+.empty{text-align:center;padding:20px 10px;color:var(--muted)}
+.help li{margin:6px 0 6px 18px;font-size:14px;color:var(--muted)}
+kbd{background:#eef2f7;border-radius:6px;padding:1px 6px;font-size:13px;border:1px solid #d5dde8}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" id="logo"></div>
+  <h1 id="htitle">KI-Seepferdchen</h1>
+  <button class="pill" id="pill"><i></i><span>…</span></button>
+</header>
+<main id="main"></main>
+<nav id="nav">
+  <button data-tab="spiel" class="on"><span>🎮</span>Spiel</button>
+  <button data-tab="spieler"><span>🧒</span>Spieler</button>
+  <button data-tab="fragen"><span>🖼️</span>Fragen</button>
+  <button data-tab="mehr"><span>⚙️</span>Mehr</button>
+</nav>
+<input type="file" id="file" accept="image/*" hidden>
+<input type="file" id="importfile" accept="application/json,.json" hidden>
+<div id="toast"></div>
+
+<script src="js/vendor/peerjs.min.js"></script>
+<script src="js/common.js"></script>
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = KS.esc;
+const LS_CODE = 'ki-seepferdchen-controller-code';
+
+let state = KS.defaultState();
+let client = null;
+let conn = {state:'idle', text:'Nicht verbunden'};
+let mode = null;            // {code} | {local:true} | null
+let tab = 'spiel';
+let offlineDirty = false;
+let firstSync = true;
+let showConnect = false;
+let draft = {image:null, text:''};
+let editId = null;          // Frage, die gerade bearbeitet wird
+let editDraft = null;
+let pendingRender = false;
+
+$('#logo').innerHTML = KS.seahorseSVG('#FFD34D','#FF7AA8','#FFF3B0');
+
+/* ================================================= Helfer */
+function toast(t, ms){
+  const el = $('#toast'); el.textContent = t; el.classList.add('on');
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('on'), ms||2200);
+}
+function avatar(p){
+  return p.avatar ? `<img src="${p.avatar}" alt="" class="${/^data:image\/png/.test(p.avatar)?'fit':''}">` : esc(p.emoji);
+}
+const isConnected = () => conn.state==='connected';
+let saveTimer=null;
+function saveLocal(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>KS.store.set('controller-state', {state, offlineDirty}), 500); }
+
+function send(action){
+  if(isConnected() && client){
+    client.send({kind:'action', action});
+  } else {
+    state = KS.reduce(state, action);
+    offlineDirty = true;
+    saveLocal(); render();
+    if(mode) toast('Offline gespeichert – wird beim Verbinden übertragen');
+  }
+}
+
+function pickImage(max){
+  return new Promise(resolve=>{
+    const f = $('#file');
+    f.value = '';
+    f.onchange = async ()=>{
+      const file = f.files && f.files[0];
+      if(!file){ resolve(null); return; }
+      toast('Bild wird vorbereitet …', 1500);
+      try{ resolve(await KS.resizeImage(file, max)); }
+      catch(e){ toast('Dieses Bild konnte nicht gelesen werden 😕'); resolve(null); }
+    };
+    f.click();
+  });
+}
+
+/* ================================================= Verbindung */
+function startClient(m){
+  if(client){ try{ client.close(); }catch(e){} client = null; }
+  mode = m; firstSync = true;
+  if(!m){ conn = {state:'idle', text:'Nicht verbunden'}; render(); return; }
+  if(m.code) try{ localStorage.setItem(LS_CODE, m.code); }catch(e){}
+  client = KS.createClient({
+    code: m.code, local: !!m.local,
+    onStatus: st => {
+      conn = st;
+      if(st.state!=='connected') firstSync = true;
+      if(st.state==='connected'){ showConnect = false; try{ navigator.wakeLock && navigator.wakeLock.request('screen').catch(()=>{}); }catch(e){} }
+      renderHeader();
+      if(tab==='spiel' || showConnect) render();
+    },
+    onMessage
+  });
+  render();
+}
+
+function onMessage(msg){
+  if(msg.kind==='sync'){
+    const remote = KS.normalize(msg.state);
+    if(firstSync){
+      firstSync = false;
+      const localHasData = !KS.isEmpty(state);
+      if(KS.isEmpty(remote) && localHasData){
+        client.send({kind:'action', action:{type:'replaceState', state}});
+        offlineDirty = false;
+        toast('Deine Fragen & Spieler wurden zum Beamer geschickt 🚀', 3000);
+        return;
+      }
+      if(offlineDirty && localHasData && confirm('Du hast offline Änderungen gemacht. Sollen sie auf den Beamer übertragen werden?\n\n„Abbrechen“ = Stand vom Beamer übernehmen.')){
+        client.send({kind:'action', action:{type:'replaceState', state}});
+        offlineDirty = false;
+        return;
+      }
+    }
+    state = remote; offlineDirty = false; saveLocal(); render();
+  } else if(msg.kind==='action' && msg.action){
+    state = KS.reduce(state, msg.action);
+    saveLocal(); render();
+  }
+}
+
+/* ================================================= Rendering */
+function renderHeader(){
+  $('#htitle').textContent = state.title || 'KI-Seepferdchen';
+  const pill = $('#pill');
+  let cls = '', txt = '';
+  if(!mode){ cls='offline'; txt='Verbinden'; }
+  else if(conn.state==='connected'){ cls='connected'; txt = mode.local ? 'Lokal verbunden' : 'Beamer '+mode.code; }
+  else if(conn.state==='notfound' || conn.state==='error'){ cls='offline'; txt='Nicht gefunden'; }
+  else { cls=''; txt='Verbinde …'; }
+  pill.className = 'pill '+cls; pill.querySelector('span').textContent = txt;
+}
+
+function render(){
+  // Nicht neu zeichnen, während getippt wird
+  const ae = document.activeElement;
+  if(ae && /INPUT|TEXTAREA/.test(ae.tagName) && ae.type!=='file' && ae.type!=='checkbox' && $('#main').contains(ae)){ pendingRender = true; return; }
+  pendingRender = false;
+  renderHeader();
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on', b.dataset.tab===tab && !showConnect));
+  const main = $('#main');
+  if(showConnect || (!mode && tab==='spiel' && KS.isEmpty(state))) { main.innerHTML = connectHTML(); return; }
+  main.innerHTML = connBanner() + ({spiel:spielHTML, spieler:spielerHTML, fragen:fragenHTML, mehr:mehrHTML}[tab])();
+}
+document.addEventListener('focusout', ()=>setTimeout(()=>{ if(pendingRender) render(); }, 50));
+
+function connBanner(){
+  if(!mode) return `<div class="banner">📴 <div class="grow">Noch nicht mit dem Beamer verbunden. Änderungen werden auf dem Handy gespeichert.</div><button class="btn small" data-act="showconnect">Verbinden</button></div>`;
+  if(conn.state==='connected') return '';
+  const err = conn.state==='notfound' || conn.state==='error';
+  return `<div class="banner ${err?'err':''}">${err?'⚠️':'⏳'} <div class="grow">${esc(conn.text||'Verbinde …')}</div><button class="btn small" data-act="showconnect">Ändern</button></div>`;
+}
+
+function connectHTML(){
+  let saved = ''; try{ saved = localStorage.getItem(LS_CODE)||''; }catch(e){}
+  return `<div class="connect">
+    <div class="horse">${KS.seahorseSVG()}</div>
+    <h2 style="text-align:center;margin-top:0">Mit dem Beamer verbinden</h2>
+    <p class="muted">Öffne auf dem Laptop am Beamer die <b>Beamer-Ansicht</b>. Dort steht ein 4-stelliger Code – oder scanne einfach den QR-Code.</p>
+    <input class="codein" id="codein" type="text" inputmode="numeric" maxlength="4" placeholder="1234" value="${esc(saved)}" autocomplete="off">
+    <button class="btn primary big block" data-act="connect">🔗 Verbinden</button>
+    ${mode && conn.state!=='connected' ? `<p class="muted" style="margin-top:10px">${esc(conn.text||'')}</p>`:''}
+    <div style="margin-top:18px;display:grid;gap:10px">
+      <button class="btn block" data-act="local">💻 Beamer läuft im selben Browser (Laptop)</button>
+      <button class="btn block" data-act="offline">✏️ Erst mal ohne Beamer vorbereiten</button>
+    </div>
+  </div>`;
+}
+
+function spielHTML(){
+  const qs = state.questions, q = qs[state.current];
+  const ps = KS.activePlayers(state);
+  const total = ps.reduce((s,p)=>s+p.points,0);
+  return `
+  <div class="seg">
+    ${[['title','🏠 Start'],['game','🎲 Spielfeld'],['board','💎 Schatzkammer']].map(([v,l])=>`<button data-act="view" data-v="${v}" class="${state.view===v?'on':''}">${l}</button>`).join('')}
+  </div>
+
+  <h2>Auf dem Beamer ${qs.length?`<span class="muted">· Frage ${state.current+1} von ${qs.length}</span>`:''}</h2>
+  <div class="card">
+    ${q ? `<div class="qprev"><div class="qthumb">${q.image?`<img src="${q.image}" alt="">`:'💬'}</div><div class="qtxt grow">${esc(q.text)||'<span class="muted">(ohne Text)</span>'}</div></div>`
+        : `<div class="empty">Noch keine Fragen. <button class="linkbtn" data-act="tab" data-t="fragen">Jetzt anlegen →</button></div>`}
+    <div class="navbtns">
+      <button class="btn big" data-act="step" data-d="-1" ${state.current<=0?'disabled':''}>◀</button>
+      <button class="btn primary big" data-act="step" data-d="1" ${state.current>=qs.length-1?'disabled':''}>Weiter ▶</button>
+    </div>
+  </div>
+
+  <h2>Perlen verteilen <span class="muted">· Antippen = +1</span></h2>
+  <div class="pgrid">
+    ${ps.map(p=>`<button class="ptile" style="--c:${p.color}" data-act="point" data-id="${p.id}">
+      <span class="minus" data-act="minus" data-id="${p.id}" role="button" aria-label="Perle abziehen">−</span>
+      <span class="plus">+1</span>
+      <span class="av">${avatar(p)}</span>
+      <span class="nm">${esc(p.name)}</span>
+      <span class="pts"><span class="pearl"></span>${p.points}</span>
+    </button>`).join('')}
+  </div>
+  <div class="actions">
+    <button class="btn primary" data-act="all">🎉 Alle +1</button>
+    <button class="btn" data-act="celebrate">✨ Konfetti</button>
+  </div>
+  <p class="muted" style="text-align:center;margin-top:12px">Gemeinsam gesammelt: <b>${total}</b> <span class="pearl" style="vertical-align:-2px"></span></p>`;
+}
+
+function spielerHTML(){
+  const ps = KS.activePlayers(state);
+  return `
+  <h2>Wie viele spielen mit?</h2>
+  <div class="card">
+    <div class="stepper">
+      <button class="btn" data-act="count" data-d="-1" ${state.playerCount<=1?'disabled':''}>−</button>
+      <b>${state.playerCount}</b>
+      <button class="btn" data-act="count" data-d="1" ${state.playerCount>=KS.MAX_PLAYERS?'disabled':''}>+</button>
+    </div>
+  </div>
+  <h2>Namen & Bilder</h2>
+  <div class="card">
+    ${ps.map(p=>`<div class="pedit" style="--c:${p.color}">
+      <button class="av" data-act="avatar" data-id="${p.id}" aria-label="Bild hochladen">${avatar(p)}<span class="cam">📷</span></button>
+      <div class="grow">
+        <input type="text" value="${esc(p.name)}" data-field="pname" data-id="${p.id}" maxlength="24" enterkeyhint="done">
+        <div class="swatches">${KS.COLORS.map(c=>`<button class="sw ${c===p.color?'on':''}" style="background:${c}" data-act="color" data-id="${p.id}" data-c="${c}" aria-label="Farbe"></button>`).join('')}</div>
+        ${p.avatar ? `<button class="linkbtn" data-act="noavatar" data-id="${p.id}">Bild entfernen</button>`
+                   : `<div class="emojis">${KS.ANIMALS.map(e=>`<button class="${e===p.emoji?'on':''}" data-act="emoji" data-id="${p.id}" data-e="${e}">${e}</button>`).join('')}</div>`}
+      </div>
+    </div>`).join('')}
+  </div>
+  <p class="muted" style="margin-top:10px">Tipp: Tippe auf den Kreis, um ein Foto oder Logo hochzuladen. Ohne Bild wird ein Meerestier angezeigt.</p>`;
+}
+
+function questionForm(d, isEdit){
+  return `<div class="card">
+    <button class="imgpick" data-act="${isEdit?'editimg':'draftimg'}">${d.image?`<img src="${d.image}" alt="">`:'🖼️ Bild auswählen (optional)'}</button>
+    ${d.image?`<button class="linkbtn" data-act="${isEdit?'editnoimg':'draftnoimg'}">Bild entfernen</button>`:''}
+    <label class="lbl">Text unter dem Bild</label>
+    <textarea data-field="${isEdit?'edittext':'drafttext'}" placeholder="z. B. Ist das ein echtes Foto oder hat es eine KI gemacht?">${esc(d.text)}</textarea>
+    <div class="row" style="margin-top:10px">
+      ${isEdit ? `<button class="btn" data-act="editcancel">Abbrechen</button><button class="btn primary grow" data-act="editsave">💾 Speichern</button>`
+               : `<button class="btn primary grow" data-act="addq">➕ Frage hinzufügen</button>`}
+    </div>
+  </div>`;
+}
+
+function fragenHTML(){
+  const qs = state.questions;
+  return `
+  <h2>Neue Frage</h2>
+  ${questionForm(draft, false)}
+  <h2>Alle Fragen <span class="muted">(${qs.length})</span></h2>
+  ${qs.length ? `<div class="card">${qs.map((q,i)=> editId===q.id ? `<div style="margin:6px 0">${questionForm(editDraft, true)}</div>` : `
+    <div class="qitem ${i===state.current?'cur':''}">
+      <div class="num">${i+1}</div>
+      <div class="qthumb">${q.image?`<img src="${q.image}" alt="">`:'💬'}</div>
+      <div class="grow">
+        <div class="qtxt">${esc(q.text)||'<span class="muted">(ohne Text)</span>'}</div>
+        <div class="qbtns">
+          <button class="btn primary" data-act="show" data-i="${i}">📺 Zeigen</button>
+          <button class="btn" data-act="edit" data-id="${q.id}">✏️</button>
+          <button class="btn" data-act="up" data-id="${q.id}" ${i===0?'disabled':''}>↑</button>
+          <button class="btn" data-act="down" data-id="${q.id}" ${i===qs.length-1?'disabled':''}>↓</button>
+          <button class="btn danger" data-act="delq" data-id="${q.id}">🗑</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>` : `<div class="card empty">Noch keine Fragen angelegt.</div>`}`;
+}
+
+function mehrHTML(){
+  return `
+  <h2>Titel</h2>
+  <div class="card">
+    <label class="lbl" style="margin-top:0">Überschrift</label>
+    <input type="text" data-field="title" value="${esc(state.title)}" maxlength="40">
+    <label class="lbl">Untertitel (Startbildschirm)</label>
+    <input type="text" data-field="subtitle" value="${esc(state.subtitle)}" maxlength="80">
+  </div>
+  <h2>Effekte</h2>
+  <div class="card">
+    <label class="toggle"><span>🔊 Töne auf dem Beamer</span><input type="checkbox" data-setting="sound" ${state.settings.sound?'checked':''}></label>
+    <label class="toggle"><span>🎉 Große Jubel-Animation bei jeder Perle</span><input type="checkbox" data-setting="celebration" ${state.settings.celebration?'checked':''}></label>
+  </div>
+  <h2>Sichern & Übertragen</h2>
+  <div class="card" style="display:grid;gap:10px">
+    <button class="btn block" data-act="export">💾 Sicherung herunterladen</button>
+    <button class="btn block" data-act="import">📂 Sicherung laden</button>
+    ${isConnected() ? `<button class="btn block" data-act="push">📤 Daten von diesem Handy an den Beamer senden</button>` : ''}
+  </div>
+  <h2>Zurücksetzen</h2>
+  <div class="card" style="display:grid;gap:10px">
+    <button class="btn warn block" data-act="resetpoints">🔄 Alle Perlen auf 0 (neue Runde)</button>
+    <button class="btn danger block" data-act="resetall">🧹 Alles löschen (Spieler, Fragen, Perlen)</button>
+  </div>
+  <h2>Verbindung</h2>
+  <div class="card" style="display:grid;gap:10px">
+    <div class="muted">${mode ? (mode.local?'Lokal (gleicher Browser)':'Beamer-Code '+esc(mode.code))+' · '+esc(conn.text||'') : 'Nicht verbunden'}</div>
+    <button class="btn block" data-act="showconnect">🔗 Mit anderem Beamer verbinden</button>
+  </div>
+  <h2>Tastatur am Beamer-Laptop</h2>
+  <div class="card help"><ul>
+    <li><kbd>→</kbd>/<kbd>Leertaste</kbd> nächste Frage, <kbd>←</kbd> zurück</li>
+    <li><kbd>1</kbd>…<kbd>0</kbd> Perle für Spieler 1–10 (<kbd>Shift</kbd> = abziehen)</li>
+    <li><kbd>A</kbd> alle +1 · <kbd>K</kbd> Konfetti · <kbd>F</kbd> Vollbild</li>
+    <li><kbd>S</kbd> Start · <kbd>G</kbd> Spielfeld · <kbd>B</kbd> Schatzkammer</li>
+  </ul></div>`;
+}
+
+/* ================================================= Bedienung */
+$('#nav').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-tab]'); if(!b) return;
+  tab = b.dataset.tab; showConnect = false; render(); scrollTo(0,0);
+});
+$('#pill').addEventListener('click', ()=>{ showConnect = true; render(); });
+
+$('#main').addEventListener('click', async e=>{
+  const el = e.target.closest('[data-act]'); if(!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  switch(act){
+    case 'connect': {
+      const code = ($('#codein').value||'').replace(/\D/g,'');
+      if(code.length!==4){ toast('Bitte den 4-stelligen Code vom Beamer eingeben'); return; }
+      showConnect = false; startClient({code}); break;
+    }
+    case 'local': showConnect = false; startClient({local:true}); break;
+    case 'offline': showConnect = false; startClient(null); tab = 'spieler'; render(); break;
+    case 'showconnect': showConnect = true; render(); break;
+    case 'tab': tab = el.dataset.t; render(); break;
+    case 'view': send({type:'setView', view: el.dataset.v}); break;
+    case 'step': send({type:'step', delta: +el.dataset.d}); if(state.view!=='game' && +el.dataset.d>0) send({type:'setView', view:'game'}); break;
+    case 'minus': e.stopPropagation(); send({type:'points', id, delta:-1}); break;
+    case 'point': {
+      el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+      try{ navigator.vibrate && navigator.vibrate(25); }catch(_){}
+      send({type:'points', id, delta:1}); break;
+    }
+    case 'all': send({type:'pointsAll', delta:1}); try{ navigator.vibrate && navigator.vibrate([20,40,20]); }catch(_){} break;
+    case 'celebrate': send({type:'celebrate'}); break;
+    case 'count': send({type:'setPlayerCount', n: state.playerCount + (+el.dataset.d)}); break;
+    case 'avatar': { const img = await pickImage(420); if(img) send({type:'updatePlayer', id, patch:{avatar:img}}); break; }
+    case 'noavatar': send({type:'updatePlayer', id, patch:{avatar:null}}); break;
+    case 'color': send({type:'updatePlayer', id, patch:{color: el.dataset.c}}); break;
+    case 'emoji': send({type:'updatePlayer', id, patch:{emoji: el.dataset.e}}); break;
+    case 'draftimg': { const img = await pickImage(1600); if(img){ draft.image = img; render(); } break; }
+    case 'draftnoimg': draft.image = null; render(); break;
+    case 'addq': {
+      if(!draft.image && !draft.text.trim()){ toast('Bitte ein Bild oder einen Text eingeben'); return; }
+      send({type:'addQuestion', q:{id:KS.uid(), image:draft.image, text:draft.text.trim()}});
+      draft = {image:null, text:''}; toast('Frage hinzugefügt ✅'); render(); break;
+    }
+    case 'show': send({type:'goto', index:+el.dataset.i, view:'game'}); toast('Wird auf dem Beamer gezeigt 📺'); break;
+    case 'edit': { const q = state.questions.find(x=>x.id===id); if(q){ editId = id; editDraft = {image:q.image, text:q.text}; render(); } break; }
+    case 'editimg': { const img = await pickImage(1600); if(img){ editDraft.image = img; render(); } break; }
+    case 'editnoimg': editDraft.image = null; render(); break;
+    case 'editcancel': editId = null; editDraft = null; render(); break;
+    case 'editsave': {
+      const q = state.questions.find(x=>x.id===editId);
+      if(q){ const patch = {text: editDraft.text.trim()}; if(editDraft.image !== q.image) patch.image = editDraft.image; send({type:'updateQuestion', id:editId, patch}); }
+      editId = null; editDraft = null; render(); break;
+    }
+    case 'up': send({type:'moveQuestion', id, dir:-1}); break;
+    case 'down': send({type:'moveQuestion', id, dir:1}); break;
+    case 'delq': if(confirm('Diese Frage wirklich löschen?')) send({type:'deleteQuestion', id}); break;
+    case 'resetpoints': if(confirm('Alle Perlen auf 0 setzen?')) send({type:'resetPoints'}); break;
+    case 'resetall': if(confirm('Wirklich ALLES löschen – Spieler, Bilder, Fragen und Perlen?')){ send({type:'resetAll'}); draft={image:null,text:''}; } break;
+    case 'export': {
+      const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'ki-seepferdchen-sicherung.json'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 2000); break;
+    }
+    case 'import': $('#importfile').click(); break;
+    case 'push': if(confirm('Den Stand von diesem Handy auf den Beamer übertragen?')) send({type:'replaceState', state}); break;
+  }
+});
+
+$('#main').addEventListener('input', e=>{
+  const f = e.target.dataset.field;
+  if(f==='drafttext') draft.text = e.target.value;
+  else if(f==='edittext' && editDraft) editDraft.text = e.target.value;
+});
+$('#main').addEventListener('change', e=>{
+  const t = e.target, f = t.dataset.field;
+  if(f==='pname') send({type:'updatePlayer', id:t.dataset.id, patch:{name: t.value.trim() || 'Spieler'}});
+  else if(f==='title') send({type:'setMeta', patch:{title: t.value.trim() || 'KI-Seepferdchen'}});
+  else if(f==='subtitle') send({type:'setMeta', patch:{subtitle: t.value.trim()}});
+  else if(t.dataset.setting) send({type:'setSettings', patch:{[t.dataset.setting]: t.checked}});
+});
+$('#main').addEventListener('keydown', e=>{
+  if(e.key==='Enter' && e.target.tagName==='INPUT'){
+    if(e.target.id==='codein'){ e.preventDefault(); document.querySelector('[data-act="connect"]').click(); }
+    else e.target.blur();
+  }
+});
+$('#importfile').addEventListener('change', async e=>{
+  const file = e.target.files && e.target.files[0]; if(!file) return;
+  try{
+    const data = JSON.parse(await file.text());
+    if(confirm('Sicherung laden? Der aktuelle Stand wird ersetzt.')){ send({type:'replaceState', state: KS.normalize(data)}); toast('Sicherung geladen ✅'); }
+  }catch(err){ toast('Diese Datei ist keine gültige Sicherung 😕'); }
+  e.target.value = '';
+});
+
+/* ================================================= Start */
+(async ()=>{
+  const saved = await KS.store.get('controller-state');
+  if(saved && saved.state){ state = KS.normalize(saved.state); offlineDirty = !!saved.offlineDirty; }
+  const params = new URLSearchParams(location.search);
+  const code = (params.get('code')||'').replace(/\D/g,'');
+  if(params.has('local')) startClient({local:true});
+  else if(code.length===4) startClient({code});
+  else {
+    let last = ''; try{ last = localStorage.getItem(LS_CODE)||''; }catch(e){}
+    showConnect = true;
+    render();
+  }
+})();
+})();
+</script>
+</body>
+</html>

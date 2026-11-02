@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KI-Seepferdchen</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif;min-height:100vh;color:#0d2346;
+  background:linear-gradient(180deg,#22a6e0 0%,#0b6cb8 55%,#062a5c 100%);display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.box{max-width:760px;width:100%;text-align:center}
+.horse{width:120px;margin:0 auto;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+h1{color:#fff;font-size:clamp(2.2rem,7vw,4rem);text-shadow:0 4px 0 #0a4d93,0 10px 20px rgba(0,0,0,.3);margin:8px 0 4px}
+p.sub{color:#e9fbff;font-size:1.15rem;margin-bottom:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+a.tile{display:block;background:#fff;border-radius:24px;padding:24px 18px;text-decoration:none;color:inherit;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:transform .15s}
+a.tile:hover{transform:translateY(-4px)}
+a.tile .ic{font-size:52px}
+a.tile b{display:block;font-size:1.4rem;margin:6px 0}
+a.tile span{color:#5a7393}
+.how{background:rgba(255,255,255,.92);border-radius:24px;padding:18px 22px;margin-top:18px;text-align:left}
+.how h2{font-size:1.15rem;margin-bottom:6px}
+.how ol{padding-left:22px;color:#33506f;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="horse" id="horse"></div>
+  <h1>KI-Seepferdchen</h1>
+  <p class="sub">Das Spielbrett für den Beamer – gesteuert mit dem Handy</p>
+  <div class="grid">
+    <a class="tile" href="beamer.html"><div class="ic">🖥️</div><b>Beamer-Ansicht</b><span>Auf dem Laptop am Beamer öffnen</span></a>
+    <a class="tile" href="steuerung.html"><div class="ic">📱</div><b>Steuerung</b><span>Auf dem Handy öffnen</span></a>
+  </div>
+  <div class="how">
+    <h2>So geht's</h2>
+    <ol>
+      <li>Laptop: <b>Beamer-Ansicht</b> öffnen und auf „Vollbild &amp; Ton starten“ klicken.</li>
+      <li>Handy: den <b>QR-Code</b> auf dem Beamer scannen (oder „Steuerung“ öffnen und den 4-stelligen Code eingeben).</li>
+      <li>Auf dem Handy unter <b>Spieler</b> Anzahl, Namen und Bilder festlegen, unter <b>Fragen</b> Bilder und Texte anlegen.</li>
+      <li>Im Tab <b>Spiel</b> durch die Fragen blättern und Perlen verteilen. Zum Schluss: <b>Schatzkammer</b> 💎</li>
+    </ol>
+  </div>
+</div>
+<script src="js/common.js"></script>
+<script>document.getElementById('horse').innerHTML = KS.seahorseSVG();</script>
+</body>
+</html>
