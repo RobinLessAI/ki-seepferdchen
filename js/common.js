@@ -29,6 +29,7 @@
       color: COLORS[i],
       emoji: ANIMALS[i],
       avatar: null,
+      fit: 'cover',
       points: 0
     }));
   }
@@ -62,6 +63,7 @@
         color: typeof o.color === 'string' ? o.color : p.color,
         emoji: typeof o.emoji === 'string' ? o.emoji : p.emoji,
         avatar: typeof o.avatar === 'string' ? o.avatar : null,
+        fit: o.fit === 'contain' ? 'contain' : 'cover',
         points: Math.max(0, Number(o.points) || 0)
       };
     });
@@ -93,7 +95,7 @@
         break;
       case 'updatePlayer': {
         const p = findP(a.id);
-        if (p && a.patch) ['name', 'avatar', 'color', 'emoji'].forEach(k => { if (k in a.patch) p[k] = a.patch[k]; });
+        if (p && a.patch) ['name', 'avatar', 'color', 'emoji', 'fit'].forEach(k => { if (k in a.patch) p[k] = a.patch[k]; });
         break;
       }
       case 'points': {
@@ -481,17 +483,42 @@
       img.src = url;
     });
   }
-  async function resizeImage(file, max) {
+  // Durchsichtigen Rand (z. B. bei Logos) finden, damit das Bild den Platz voll nutzt
+  function opaqueBox(img, w, h) {
+    try {
+      const sc = Math.min(1, 400 / Math.max(w, h));
+      const cw = Math.max(1, Math.round(w * sc)), ch = Math.max(1, Math.round(h * sc));
+      const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+      const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, cw, ch);
+      const d = ctx.getImageData(0, 0, cw, ch).data;
+      let x0 = cw, y0 = ch, x1 = -1, y1 = -1;
+      for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) {
+        if (d[(y * cw + x) * 4 + 3] > 12) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      }
+      if (x1 < 0) return null;
+      const pad = 1;
+      x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(cw - 1, x1 + pad); y1 = Math.min(ch - 1, y1 + pad);
+      if (x0 === 0 && y0 === 0 && x1 === cw - 1 && y1 === ch - 1) return null;
+      return { x: x0 / sc, y: y0 / sc, w: (x1 - x0 + 1) / sc, h: (y1 - y0 + 1) / sc };
+    } catch (e) { return null; }
+  }
+
+  async function resizeImage(file, max, opts) {
     const img = await loadImage(file);
     let w = img.naturalWidth || 800, h = img.naturalHeight || 800;
+    const alpha = /png|gif|webp|svg/i.test(file.type);
+    let src = { x: 0, y: 0, w, h };
+    if (alpha && opts && opts.trim) {
+      const box = opaqueBox(img, w, h);
+      if (box) { src = box; w = Math.round(box.w); h = Math.round(box.h); }
+    }
     const sc = Math.min(1, max / Math.max(w, h));
     w = Math.max(1, Math.round(w * sc)); h = Math.max(1, Math.round(h * sc));
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
     const ctx = c.getContext('2d');
-    const alpha = /png|gif|webp|svg/i.test(file.type);
     if (!alpha) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
-    ctx.drawImage(img, 0, 0, w, h);
+    ctx.drawImage(img, src.x, src.y, src.w, src.h, 0, 0, w, h);
     return alpha ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.85);
   }
 

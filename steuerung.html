@@ -76,7 +76,7 @@ nav button.on{background:var(--sky);color:var(--blue)}
 .ptile:active{transform:translateY(2px) scale(.97);box-shadow:0 1px 0 var(--c)}
 .ptile .av{width:62px;height:62px;border-radius:50%;background:var(--c);display:grid;place-items:center;font-size:34px;overflow:hidden;box-shadow:inset 0 0 0 3px rgba(255,255,255,.7)}
 .ptile .av img{width:100%;height:100%;object-fit:cover}
-.ptile .av img.fit{object-fit:contain;background:#fff;padding:6%}
+.ptile .av img.fit{object-fit:contain;background:#fff}
 .ptile .nm{font-weight:700;font-size:16px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ptile .pts{display:flex;align-items:center;gap:6px;font-weight:700;font-size:20px}
 .ptile .plus{position:absolute;top:8px;right:8px;background:var(--c);color:#fff;font-weight:700;border-radius:99px;padding:2px 9px;font-size:15px}
@@ -94,7 +94,10 @@ nav button.on{background:var(--sky);color:var(--blue)}
 .pedit:last-child{border-bottom:0}
 .pedit .av{width:72px;height:72px;border-radius:50%;background:var(--c);display:grid;place-items:center;font-size:38px;overflow:hidden;flex:0 0 auto;position:relative;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--c)}
 .pedit .av img{width:100%;height:100%;object-fit:cover}
-.pedit .av img.fit{object-fit:contain;background:#fff;padding:6%}
+.pedit .av img.fit{object-fit:contain;background:#fff}
+.fitsel{display:flex;gap:6px;margin-top:8px}
+.fitsel button{flex:1;padding:7px 6px;border-radius:10px;background:var(--sky);color:var(--blue);font-weight:600;font-size:13px}
+.fitsel button.on{background:var(--blue);color:#fff}
 .pedit .av .cam{position:absolute;right:-2px;bottom:-2px;background:#fff;border-radius:50%;width:26px;height:26px;display:grid;place-items:center;font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .sw{width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
@@ -185,7 +188,7 @@ function toast(t, ms){
   clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('on'), ms||2200);
 }
 function avatar(p){
-  return p.avatar ? `<img src="${p.avatar}" alt="" class="${/^data:image\/png/.test(p.avatar)?'fit':''}">` : esc(p.emoji);
+  return p.avatar ? `<img src="${p.avatar}" alt="" class="${p.fit==='contain'?'fit':''}">` : esc(p.emoji);
 }
 const isConnected = () => conn.state==='connected';
 let saveTimer=null;
@@ -202,7 +205,7 @@ function send(action){
   }
 }
 
-function pickImage(max){
+function pickImage(max, opts){
   return new Promise(resolve=>{
     const f = $('#file');
     f.value = '';
@@ -210,7 +213,7 @@ function pickImage(max){
       const file = f.files && f.files[0];
       if(!file){ resolve(null); return; }
       toast('Bild wird vorbereitet …', 1500);
-      try{ resolve(await KS.resizeImage(file, max)); }
+      try{ resolve(await KS.resizeImage(file, max, opts)); }
       catch(e){ toast('Dieses Bild konnte nicht gelesen werden 😕'); resolve(null); }
     };
     f.click();
@@ -367,7 +370,10 @@ function spielerHTML(){
       <div class="grow">
         <input type="text" value="${esc(p.name)}" data-field="pname" data-id="${p.id}" maxlength="24" enterkeyhint="done">
         <div class="swatches">${KS.COLORS.map(c=>`<button class="sw ${c===p.color?'on':''}" style="background:${c}" data-act="color" data-id="${p.id}" data-c="${c}" aria-label="Farbe"></button>`).join('')}</div>
-        ${p.avatar ? `<button class="linkbtn" data-act="noavatar" data-id="${p.id}">Bild entfernen</button>`
+        ${p.avatar ? `<div class="fitsel">
+            <button class="${p.fit!=='contain'?'on':''}" data-act="fit" data-id="${p.id}" data-f="cover">⭕ Kreis ausfüllen</button>
+            <button class="${p.fit==='contain'?'on':''}" data-act="fit" data-id="${p.id}" data-f="contain">🖼️ Ganzes Bild</button>
+          </div><button class="linkbtn" data-act="noavatar" data-id="${p.id}">Bild entfernen</button>`
                    : `<div class="emojis">${KS.ANIMALS.map(e=>`<button class="${e===p.emoji?'on':''}" data-act="emoji" data-id="${p.id}" data-e="${e}">${e}</button>`).join('')}</div>`}
       </div>
     </div>`).join('')}
@@ -486,7 +492,8 @@ $('#main').addEventListener('click', async e=>{
     case 'all': send({type:'pointsAll', delta:1}); try{ navigator.vibrate && navigator.vibrate([20,40,20]); }catch(_){} break;
     case 'celebrate': send({type:'celebrate'}); break;
     case 'count': send({type:'setPlayerCount', n: state.playerCount + (+el.dataset.d)}); break;
-    case 'avatar': { const img = await pickImage(420); if(img) send({type:'updatePlayer', id, patch:{avatar:img}}); break; }
+    case 'avatar': { const img = await pickImage(800, {trim:true}); if(img) send({type:'updatePlayer', id, patch:{avatar:img, fit:'cover'}}); break; }
+    case 'fit': send({type:'updatePlayer', id, patch:{fit: el.dataset.f}}); break;
     case 'noavatar': send({type:'updatePlayer', id, patch:{avatar:null}}); break;
     case 'color': send({type:'updatePlayer', id, patch:{color: el.dataset.c}}); break;
     case 'emoji': send({type:'updatePlayer', id, patch:{emoji: el.dataset.e}}); break;
