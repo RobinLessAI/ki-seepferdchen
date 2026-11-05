@@ -212,7 +212,7 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
   <div class="b-msg" id="b-msg"></div>
 </section>
 
-<div id="connect">
+<div id="connect" class="hide">
   <div id="qr">QR-Code</div>
   <div class="c-txt">
     <div class="c-lbl">📱 Steuerung mit dem Handy</div>
@@ -221,7 +221,7 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
     <div class="c-stat wait" id="c-stat">Starte …</div>
   </div>
 </div>
-<button id="startbtn">▶ Vollbild &amp; Ton starten</button>
+<button id="startbtn" class="hide">▶ Vollbild &amp; Ton starten</button>
 <div id="badge-conn"></div>
 <div id="soundhint">🔈 Einmal klicken für Ton</div>
 
@@ -716,12 +716,15 @@ function onStatus(st){
 function onMessage(msg, reply){
   if(!msg) return;
   if(msg.kind==='hello') reply({kind:'sync', state});
+  else if(msg.kind==='setPin' && /^\d{4}$/.test(msg.pin||'')) KS.pin.set(msg.pin);
   else if(msg.kind==='ping') reply({kind:'pong'});
   else if(msg.kind==='action' && msg.action) apply(msg.action);
 }
 
 /* ================================================= Tastatur (Notfall-Steuerung) */
+let unlocked = false;
 addEventListener('keydown', e=>{
+  if(!unlocked) return;
   unlock();
   if(e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
   const k = e.key;
@@ -753,10 +756,13 @@ let rz; addEventListener('resize', ()=>{ clearTimeout(rz); rz = setTimeout(()=>{
 
 /* ================================================= Start */
 (async ()=>{
+  // Erst nach der richtigen PIN wird etwas angezeigt oder eine Verbindung geöffnet.
+  await KS.lockScreen({ onReset: () => KS.store.set('beamer-state', null) });
+  unlocked = true;
   const saved = await KS.store.get('beamer-state');
   if(saved) state = KS.normalize(saved);
   renderAll();
-  host = KS.createHost({onMessage, onStatus});
+  host = KS.createHost({onMessage, onStatus, checkPin: p => KS.pin.check(p)});
 })();
 })();
 </script>

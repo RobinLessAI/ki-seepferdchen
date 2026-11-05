@@ -210,8 +210,30 @@
     const saveCode = () => { try { localStorage.setItem(CODE_KEY, code); } catch (e) {} };
     saveCode();
 
-    const conns = new Set();
+    const conns = new Set();          // nur Handys mit richtiger PIN
     const localSeen = new Map();
+    const localAuthed = new Set();
+    let fails = 0, lockUntil = 0;
+
+    // Jede neue Verbindung muss zuerst mit der richtigen PIN „hallo“ sagen.
+    async function gate(msg, reply, isAuthed, setAuthed, kick) {
+      if (isAuthed()) { opts.onMessage(msg, reply); return; }
+      if (!msg || msg.kind !== 'hello') return;
+      if (Date.now() < lockUntil) {
+        reply({ kind: 'denied', reason: 'locked', wait: Math.ceil((lockUntil - Date.now()) / 1000) });
+        kick(); return;
+      }
+      const ok = opts.checkPin ? await opts.checkPin(String(msg.pin || '')) : true;
+      if (!ok) {
+        fails++;
+        if (fails >= 5) { fails = 0; lockUntil = Date.now() + 60000; }
+        reply({ kind: 'denied', reason: 'pin' });
+        kick(); return;
+      }
+      fails = 0;
+      setAuthed();
+      opts.onMessage(msg, reply);
+    }
     let peer = null, idTries = 0, retryTimer = null;
     const status = { code, online: false, error: null, controllers: 0 };
 
@@ -239,8 +261,11 @@
       peer = me;
       me.on('open', () => { idTries = 0; status.online = true; status.error = null; emit(); });
       me.on('connection', conn => {
-        const dec = makeDecoder(msg => opts.onMessage(msg, reply => sendConn(conn, reply)));
-        conn.on('open', () => { conns.add(conn); emit(); });
+        let authed = false;
+        const reply = m => sendConn(conn, m);
+        const dec = makeDecoder(msg => gate(msg, reply, () => authed,
+          () => { authed = true; conns.add(conn); emit(); },
+          () => setTimeout(() => { try { conn.close(); } catch (e) {} }, 800)));
         conn.on('data', dec);
         const gone = () => { conns.delete(conn); emit(); };
         conn.on('close', gone);
@@ -272,11 +297,12 @@
       bc.onmessage = e => {
         const m = e.data;
         if (!m || m.from !== 'client') return;
-        if (m.kind === 'bye') { localSeen.delete(m.cid); emit(); return; }
-        const isNew = !localSeen.has(m.cid);
-        localSeen.set(m.cid, Date.now());
-        if (isNew) emit();
-        opts.onMessage(m, reply => bc.postMessage(Object.assign({}, reply, { from: 'host', to: m.cid })));
+        if (m.kind === 'bye') { localSeen.delete(m.cid); localAuthed.delete(m.cid); emit(); return; }
+        const reply = r => bc.postMessage(Object.assign({}, r, { from: 'host', to: m.cid }));
+        gate(m, reply, () => localAuthed.has(m.cid),
+          () => { localAuthed.add(m.cid); localSeen.set(m.cid, Date.now()); emit(); },
+          () => {});
+        if (localAuthed.has(m.cid)) localSeen.set(m.cid, Date.now());
       };
     }
 
@@ -296,12 +322,21 @@
   /* ------------------------------------------------------- Handy = Client */
   function createClient(opts) {
     const cid = uid();
-    let alive = true, connected = false, lastPong = 0;
+    let alive = true, connected = false, lastPong = 0, denied = false;
+    const hello = () => ({ kind: 'hello', pin: opts.pin || '' });
     let peer = null, conn = null, retryTimer = null, openTimer = null, pingTimer = null;
     const setStatus = (state, text) => opts.onStatus && opts.onStatus({ state, text });
     const onMsg = m => {
       lastPong = Date.now();
       if (m.kind === 'pong') return;
+      if (m.kind === 'denied') {
+        denied = true; connected = false;
+        clearTimeout(retryTimer);
+        setStatus('denied', m.reason === 'locked'
+          ? 'Zu viele falsche Versuche – bitte ' + (m.wait || 60) + ' Sekunden warten.'
+          : 'Die PIN passt nicht zu diesem Beamer.');
+        return;
+      }
       if (!connected) { connected = true; setStatus('connected', 'Verbunden'); }
       opts.onMessage(m);
     };
@@ -316,24 +351,27 @@
         onMsg(m);
       };
       setStatus('connecting', 'Suche Beamer-Fenster …');
-      post({ kind: 'hello' });
+      post(hello());
       pingTimer = setInterval(() => {
-        post({ kind: connected ? 'ping' : 'hello' });
+        if (denied) return;
+        post(connected ? { kind: 'ping' } : hello());
         if (connected && Date.now() - lastPong > 12000) { connected = false; setStatus('lost', 'Beamer-Fenster nicht erreichbar …'); }
       }, 4000);
       addEventListener('pagehide', () => post({ kind: 'bye' }));
       return {
         send: post,
         close() { alive = false; clearInterval(pingTimer); post({ kind: 'bye' }); bc.close(); },
-        reconnect() { post({ kind: 'hello' }); }
+        reconnect() { denied = false; post(hello()); },
+        setPin(p) { opts.pin = p; }
       };
     }
 
     function retry(ms) {
       clearTimeout(retryTimer);
-      if (alive) retryTimer = setTimeout(connect, ms);
+      if (alive && !denied) retryTimer = setTimeout(connect, ms);
     }
     function lost(text) {
+      if (denied) return;
       if (connected) { connected = false; }
       setStatus('lost', text || 'Verbindung verloren – verbinde neu …');
       retry(2500);
@@ -350,7 +388,7 @@
       c.on('open', () => {
         clearTimeout(openTimer);
         lastPong = Date.now();
-        sendConn(c, { kind: 'hello' });
+        sendConn(c, hello());
       });
       c.on('data', dec);
       c.on('close', () => { if (conn === c) lost(); });
@@ -387,13 +425,14 @@
       if (connected && Date.now() - lastPong > 15000) lost();
     }, 5000);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && alive && (!conn || !conn.open)) { clearTimeout(retryTimer); connect(); }
+      if (document.visibilityState === 'visible' && alive && !denied && (!conn || !conn.open)) { clearTimeout(retryTimer); connect(); }
     });
     makePeer();
     return {
       send(m) { sendConn(conn, m); },
       close() { alive = false; clearInterval(pingTimer); clearTimeout(retryTimer); try { peer && peer.destroy(); } catch (e) {} },
-      reconnect() { clearTimeout(retryTimer); connect(); }
+      reconnect() { denied = false; clearTimeout(retryTimer); connect(); },
+      setPin(p) { opts.pin = p; }
     };
   }
 
@@ -475,12 +514,137 @@
     </svg>`;
   }
 
+  /* -------------------------------------------------------- PIN */
+  // Die PIN steht nie im Code – sie wird auf dem Gerät nur als Prüfsumme gespeichert.
+  const PIN_KEY = APP_ID + '-pin';
+  const pin = {
+    has() { try { return !!localStorage.getItem(PIN_KEY); } catch (e) { return false; } },
+    async hash(p, salt) {
+      if (global.crypto && crypto.subtle) {
+        const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + ':' + p));
+        return Array.from(new Uint8Array(d)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+      let h = 0; for (const c of salt + ':' + p) h = (h * 31 + c.charCodeAt(0)) | 0;
+      return 'x' + h;
+    },
+    async set(p) {
+      const salt = uid();
+      try { localStorage.setItem(PIN_KEY, JSON.stringify({ salt, h: await pin.hash(p, salt) })); } catch (e) {}
+    },
+    async check(p) {
+      try {
+        const o = JSON.parse(localStorage.getItem(PIN_KEY) || 'null');
+        return !!o && o.h === await pin.hash(String(p), o.salt);
+      } catch (e) { return false; }
+    },
+    clear() { try { localStorage.removeItem(PIN_KEY); } catch (e) {} }
+  };
+
+  /* Sperrbildschirm mit Zahlenfeld.
+     mode: 'auto' (festlegen, falls noch keine PIN – sonst prüfen), 'set' (neue PIN), 'ask' (nur abfragen)
+     Liefert ein Promise mit der eingegebenen PIN (oder null bei Abbrechen). */
+  function lockScreen(o) {
+    o = o || {};
+    let mode = o.mode || 'auto';
+    if (mode === 'auto') mode = pin.has() ? 'check' : 'set';
+    return new Promise(resolve => {
+      const el = document.createElement('div');
+      el.className = 'ks-lock';
+      el.innerHTML = `<style>
+        .ks-lock{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;
+          background:linear-gradient(180deg,#22a6e0 0%,#0b6cb8 55%,#062a5c 100%);font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif;color:#0d2346}
+        .ks-box{background:#fff;border-radius:28px;padding:22px 22px 18px;width:min(360px,100%);text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+        .ks-horse{width:72px;margin:-62px auto 4px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.25))}
+        .ks-t{font-size:22px;font-weight:700;margin-bottom:4px}
+        .ks-s{font-size:14px;color:#5a7393;min-height:20px}
+        .ks-s.err{color:#c0392b;font-weight:600}
+        .ks-dots{display:flex;gap:14px;justify-content:center;margin:16px 0 18px}
+        .ks-dots i{width:18px;height:18px;border-radius:50%;border:3px solid #0b61a8;transition:background .15s}
+        .ks-dots i.on{background:#0b61a8}
+        .ks-dots.shake{animation:ksshake .4s}
+        @keyframes ksshake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+        .ks-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+        .ks-pad button{font:600 26px 'Fredoka','Trebuchet MS',system-ui,sans-serif;height:62px;border:0;border-radius:18px;background:#e8f6ff;color:#0b61a8;cursor:pointer}
+        .ks-pad button:active{transform:scale(.95)}
+        .ks-pad button.ghost{background:none}
+        .ks-links{display:flex;justify-content:center;gap:18px;margin-top:14px}
+        .ks-links button{border:0;background:none;color:#0b61a8;font:600 14px 'Fredoka','Trebuchet MS',system-ui,sans-serif;cursor:pointer;padding:6px}
+      </style>
+      <div class="ks-box">
+        <div class="ks-horse">${seahorseSVG()}</div>
+        <div class="ks-t"></div><div class="ks-s"></div>
+        <div class="ks-dots"><i></i><i></i><i></i><i></i></div>
+        <div class="ks-pad">${[1,2,3,4,5,6,7,8,9].map(n => `<button data-k="${n}">${n}</button>`).join('')}
+          <button class="ghost" data-k="" disabled></button><button data-k="0">0</button><button data-k="del" aria-label="Löschen">⌫</button></div>
+        <div class="ks-links"></div>
+      </div>`;
+      document.body.appendChild(el);
+      const $t = el.querySelector('.ks-t'), $s = el.querySelector('.ks-s'), $d = el.querySelector('.ks-dots'), $l = el.querySelector('.ks-links');
+      let val = '', first = null, fails = 0, waitUntil = 0;
+      function texts(sub, err) {
+        $t.textContent = o.title || (mode === 'set' ? (first ? 'PIN wiederholen' : 'PIN festlegen') : 'PIN eingeben');
+        $s.textContent = sub != null ? sub : (o.subtitle || (mode === 'set' && !first ? 'Wähle eine 4-stellige PIN. Ohne sie lässt sich das Spiel nicht öffnen.' : ''));
+        $s.className = 'ks-s' + (err ? ' err' : '');
+        $l.innerHTML = (mode === 'check' && o.onReset ? '<button data-l="reset">PIN vergessen?</button>' : '') +
+                       (o.cancel ? '<button data-l="cancel">Abbrechen</button>' : '');
+      }
+      function dots() { $d.querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i < val.length)); }
+      function wrong(msg) {
+        val = ''; dots(); $d.classList.remove('shake'); void $d.offsetWidth; $d.classList.add('shake');
+        try { navigator.vibrate && navigator.vibrate(120); } catch (e) {}
+        texts(msg, true);
+      }
+      function done(p) { cleanup(); el.remove(); resolve(p); }
+      async function submit() {
+        const p = val;
+        if (mode === 'ask') return done(p);
+        if (mode === 'set') {
+          if (!first) { first = p; val = ''; dots(); texts(); return; }
+          if (p !== first) { first = null; texts(); return wrong('Die beiden PINs waren unterschiedlich – bitte nochmal.'); }
+          if (!o.noStore) await pin.set(p);
+          return done(p);
+        }
+        if (await pin.check(p)) return done(p);
+        fails++;
+        if (fails >= 5) { fails = 0; waitUntil = Date.now() + 30000; return wrong('Zu viele Versuche – bitte 30 Sekunden warten.'); }
+        wrong('Falsche PIN.');
+      }
+      function key(k) {
+        if (Date.now() < waitUntil) { texts('Bitte noch ' + Math.ceil((waitUntil - Date.now()) / 1000) + ' Sekunden warten.', true); return; }
+        if (k === 'del') { val = val.slice(0, -1); dots(); return; }
+        if (!/^\d$/.test(k) || val.length >= 4) return;
+        val += k; dots();
+        if (val.length === 4) setTimeout(submit, 120);
+      }
+      el.addEventListener('click', async e => {
+        const b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.k != null) key(b.dataset.k);
+        else if (b.dataset.l === 'cancel') done(null);
+        else if (b.dataset.l === 'reset') {
+          if (!confirm('PIN vergessen?\n\nDann werden alle auf diesem Gerät gespeicherten Spieler, Fragen und Bilder gelöscht. Danach legst du eine neue PIN fest.')) return;
+          await o.onReset();
+          pin.clear(); mode = 'set'; first = null; val = ''; dots(); texts();
+        }
+      });
+      const onKey = e => {
+        if (/^\d$/.test(e.key)) key(e.key);
+        else if (e.key === 'Backspace') key('del');
+        else if (e.key === 'Escape' && o.cancel) done(null);
+        else return;
+        e.preventDefault(); e.stopPropagation();
+      };
+      const cleanup = () => document.removeEventListener('keydown', onKey, true);
+      document.addEventListener('keydown', onKey, true);
+      texts();
+    });
+  }
+
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   global.KS = {
     APP_ID, MAX_PLAYERS, COLORS, ANIMALS,
     uid, clamp, esc,
     defaultState, normalize, reduce, isEmpty, activePlayers,
-    createHost, createClient, store, resizeImage, seahorseSVG
+    createHost, createClient, store, resizeImage, seahorseSVG, pin, lockScreen
   };
 })(window);

@@ -31,6 +31,17 @@ Ein kindgerechtes Brettspiel (8–10 Jahre) für den Beamer, gesteuert mit dem H
   jede*r bekommt ein Glas, das sich Muschel für Muschel füllt. Groß angezeigt wird die **gemeinsam** gesammelte Zahl,
   und am Ende bekommen **alle gleichzeitig** das „KI-Seepferdchen“-Abzeichen.
 
+## PIN-Schutz 🔒
+
+- Beim ersten Öffnen legt man auf dem Beamer und auf dem Handy eine **4-stellige PIN** fest (auf beiden Geräten dieselbe).
+  Danach öffnet sich das Spiel nur mit dieser PIN.
+- Nur Handys mit der richtigen PIN dürfen sich mit dem Beamer verbinden und bekommen die Daten. Nach 5 falschen Versuchen
+  sperrt der Beamer neue Verbindungen für eine Minute.
+- Die PIN steht **nicht im Code** – jedes Gerät speichert nur eine Prüfsumme davon.
+- Ändern: Handy → *Mehr → PIN ändern* (gilt bei bestehender Verbindung auch für den Beamer).
+- *PIN vergessen?* löscht die auf diesem Gerät gespeicherten Daten, danach kann eine neue PIN festgelegt werden.
+  Eine heruntergeladene Sicherung lässt sich anschließend wieder laden.
+
 ## Gut zu wissen
 
 - **Verbindung:** Handy und Beamer verbinden sich direkt per WebRTC (PeerJS). Für den Verbindungsaufbau

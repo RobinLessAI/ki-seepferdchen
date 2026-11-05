@@ -174,6 +174,8 @@ let draft = {image:null, text:''};
 let editId = null;          // Frage, die gerade bearbeitet wird
 let editDraft = null;
 let pendingRender = false;
+let myPin = '';             // PIN dieser Sitzung (wird an den Beamer geschickt)
+let pinToSave = null;       // neue PIN, die nach erfolgreicher Verbindung übernommen wird
 
 $('#logo').innerHTML = KS.seahorseSVG('#FFD34D','#FF7AA8','#FFF3B0');
 
@@ -222,9 +224,10 @@ function startClient(m){
   if(!m){ conn = {state:'idle', text:'Nicht verbunden'}; render(); return; }
   if(m.code) try{ localStorage.setItem(LS_CODE, m.code); }catch(e){}
   client = KS.createClient({
-    code: m.code, local: !!m.local,
+    code: m.code, local: !!m.local, pin: myPin,
     onStatus: st => {
       conn = st;
+      if(st.state==='connected' && pinToSave){ KS.pin.set(pinToSave); pinToSave = null; }
       if(st.state!=='connected') firstSync = true;
       if(st.state==='connected'){ showConnect = false; try{ navigator.wakeLock && navigator.wakeLock.request('screen').catch(()=>{}); }catch(e){} }
       renderHeader();
@@ -268,6 +271,7 @@ function renderHeader(){
   if(!mode){ cls='offline'; txt='Verbinden'; }
   else if(conn.state==='connected'){ cls='connected'; txt = mode.local ? 'Lokal verbunden' : 'Beamer '+mode.code; }
   else if(conn.state==='notfound' || conn.state==='error'){ cls='offline'; txt='Nicht gefunden'; }
+  else if(conn.state==='denied'){ cls='offline'; txt='PIN falsch'; }
   else { cls=''; txt='Verbinde …'; }
   pill.className = 'pill '+cls; pill.querySelector('span').textContent = txt;
 }
@@ -288,6 +292,7 @@ document.addEventListener('focusout', ()=>setTimeout(()=>{ if(pendingRender) ren
 function connBanner(){
   if(!mode) return `<div class="banner">📴 <div class="grow">Noch nicht mit dem Beamer verbunden. Änderungen werden auf dem Handy gespeichert.</div><button class="btn small" data-act="showconnect">Verbinden</button></div>`;
   if(conn.state==='connected') return '';
+  if(conn.state==='denied') return `<div class="banner err">🔒 <div class="grow">${esc(conn.text)}</div><button class="btn small" data-act="beamerpin">PIN eingeben</button></div>`;
   const err = conn.state==='notfound' || conn.state==='error';
   return `<div class="banner ${err?'err':''}">${err?'⚠️':'⏳'} <div class="grow">${esc(conn.text||'Verbinde …')}</div><button class="btn small" data-act="showconnect">Ändern</button></div>`;
 }
@@ -431,6 +436,11 @@ function mehrHTML(){
     <button class="btn warn block" data-act="resetpoints">🔄 Alle Muscheln auf 0 (neue Runde)</button>
     <button class="btn danger block" data-act="resetall">🧹 Alles löschen (Spieler, Fragen, Muscheln)</button>
   </div>
+  <h2>Sicherheit</h2>
+  <div class="card" style="display:grid;gap:10px">
+    <div class="muted">Die PIN schützt das Spiel auf dem Handy und am Beamer. Nur Handys mit der richtigen PIN können den Beamer steuern.</div>
+    <button class="btn block" data-act="changepin">🔒 PIN ändern</button>
+  </div>
   <h2>Verbindung</h2>
   <div class="card" style="display:grid;gap:10px">
     <div class="muted">${mode ? (mode.local?'Lokal (gleicher Browser)':'Beamer-Code '+esc(mode.code))+' · '+esc(conn.text||'') : 'Nicht verbunden'}</div>
@@ -509,6 +519,19 @@ $('#main').addEventListener('click', async e=>{
       setTimeout(()=>URL.revokeObjectURL(a.href), 2000); break;
     }
     case 'import': $('#importfile').click(); break;
+    case 'beamerpin': {
+      const p = await KS.lockScreen({mode:'ask', title:'PIN des Beamers', subtitle:'Gib die PIN ein, die am Beamer festgelegt wurde.', cancel:true});
+      if(p && client){ myPin = p; pinToSave = p; client.setPin(p); client.reconnect(); }
+      break;
+    }
+    case 'changepin': {
+      const p = await KS.lockScreen({mode:'set', cancel:true});
+      if(!p) break;
+      myPin = p; if(client) client.setPin(p);
+      if(isConnected()){ client.send({kind:'setPin', pin:p}); toast('Neue PIN gilt jetzt auf Handy und Beamer 🔒', 3000); }
+      else toast('Neue PIN gespeichert. Am Beamer gilt sie erst, wenn du sie bei bestehender Verbindung änderst.', 4000);
+      break;
+    }
     case 'push': if(confirm('Den Stand von diesem Handy auf den Beamer übertragen?')) send({type:'replaceState', state}); break;
   }
 });
@@ -542,6 +565,8 @@ $('#importfile').addEventListener('change', async e=>{
 
 /* ================================================= Start */
 (async ()=>{
+  // Ohne PIN wird nichts angezeigt
+  myPin = await KS.lockScreen({ onReset: () => KS.store.set('controller-state', null) });
   const saved = await KS.store.get('controller-state');
   if(saved && saved.state){ state = KS.normalize(saved.state); offlineDirty = !!saved.offlineDirty; }
   const params = new URLSearchParams(location.search);
