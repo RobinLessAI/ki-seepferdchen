@@ -83,7 +83,7 @@ nav button.on{background:var(--sky);color:var(--blue)}
 .ptile .minus{position:absolute;top:6px;left:6px;width:34px;height:34px;border-radius:50%;background:#f1f5f9;color:#64748b;font-weight:700;font-size:20px;line-height:1;display:grid;place-items:center}
 .ptile.bump{animation:tbump .45s cubic-bezier(.3,1.7,.5,1)}
 @keyframes tbump{40%{transform:scale(1.08)}}
-.pearl{width:16px;height:16px;border-radius:50%;display:inline-block;background:radial-gradient(circle at 34% 30%,#fff 0 14%,#fff4dc 30%,#f2d6a6 70%,#d9b47a 100%);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.shell{width:18px;height:18px;display:inline-block;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23ffe3ea%22/%3E%3Cstop offset=%22.55%22 stop-color=%22%23ffb3c4%22/%3E%3Cstop offset=%221%22 stop-color=%22%23ff8fa9%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d=%22M38 80 L62 80 L60 95 Q50 99 40 95 Z%22 fill=%22%23ff8fa9%22 stroke=%22%23e0647f%22 stroke-width=%222.5%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M50 86 C32 78 8 60 7 40 C6 30 10 24 16 23 C17 15 24 10 31 11 C35 5 44 3 50 6 C56 3 65 5 69 11 C76 10 83 15 84 23 C90 24 94 30 93 40 C92 60 68 78 50 86 Z%22 fill=%22url%28%23g%29%22 stroke=%22%23e0647f%22 stroke-width=%222.5%22 stroke-linejoin=%22round%22/%3E%3Cg stroke=%22%23e0647f%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 fill=%22none%22 opacity=%22.75%22%3E%3Cpath d=%22M50 84 L12 33%22/%3E%3Cpath d=%22M50 84 L22 20%22/%3E%3Cpath d=%22M50 84 L36 10%22/%3E%3Cpath d=%22M50 84 L50 8%22/%3E%3Cpath d=%22M50 84 L64 10%22/%3E%3Cpath d=%22M50 84 L78 20%22/%3E%3Cpath d=%22M50 84 L88 33%22/%3E%3C/g%3E%3Cellipse cx=%2234%22 cy=%2230%22 rx=%227%22 ry=%224%22 fill=%22%23fff%22 opacity=%22.7%22 transform=%22rotate%28-25 34 30%29%22/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 
 /* Spieler bearbeiten */
@@ -327,21 +327,21 @@ function spielHTML(){
     </div>
   </div>
 
-  <h2>Perlen verteilen <span class="muted">· Antippen = +1</span></h2>
+  <h2>Muscheln verteilen <span class="muted">· Antippen = +1</span></h2>
   <div class="pgrid">
     ${ps.map(p=>`<button class="ptile" style="--c:${p.color}" data-act="point" data-id="${p.id}">
-      <span class="minus" data-act="minus" data-id="${p.id}" role="button" aria-label="Perle abziehen">−</span>
+      <span class="minus" data-act="minus" data-id="${p.id}" role="button" aria-label="Muschel abziehen">−</span>
       <span class="plus">+1</span>
       <span class="av">${avatar(p)}</span>
       <span class="nm">${esc(p.name)}</span>
-      <span class="pts"><span class="pearl"></span>${p.points}</span>
+      <span class="pts"><span class="shell"></span>${p.points}</span>
     </button>`).join('')}
   </div>
   <div class="actions">
     <button class="btn primary" data-act="all">🎉 Alle +1</button>
     <button class="btn" data-act="celebrate">✨ Konfetti</button>
   </div>
-  <p class="muted" style="text-align:center;margin-top:12px">Gemeinsam gesammelt: <b>${total}</b> <span class="pearl" style="vertical-align:-2px"></span></p>`;
+  <p class="muted" style="text-align:center;margin-top:12px">Gemeinsam gesammelt: <b>${total}</b> <span class="shell" style="vertical-align:-2px"></span></p>`;
 }
 
 function spielerHTML(){
@@ -418,7 +418,7 @@ function mehrHTML(){
   <h2>Effekte</h2>
   <div class="card">
     <label class="toggle"><span>🔊 Töne auf dem Beamer</span><input type="checkbox" data-setting="sound" ${state.settings.sound?'checked':''}></label>
-    <label class="toggle"><span>🎉 Große Jubel-Animation bei jeder Perle</span><input type="checkbox" data-setting="celebration" ${state.settings.celebration?'checked':''}></label>
+    <label class="toggle"><span>🎉 Große Jubel-Animation bei jeder Muschel</span><input type="checkbox" data-setting="celebration" ${state.settings.celebration?'checked':''}></label>
   </div>
   <h2>Sichern & Übertragen</h2>
   <div class="card" style="display:grid;gap:10px">
@@ -428,8 +428,8 @@ function mehrHTML(){
   </div>
   <h2>Zurücksetzen</h2>
   <div class="card" style="display:grid;gap:10px">
-    <button class="btn warn block" data-act="resetpoints">🔄 Alle Perlen auf 0 (neue Runde)</button>
-    <button class="btn danger block" data-act="resetall">🧹 Alles löschen (Spieler, Fragen, Perlen)</button>
+    <button class="btn warn block" data-act="resetpoints">🔄 Alle Muscheln auf 0 (neue Runde)</button>
+    <button class="btn danger block" data-act="resetall">🧹 Alles löschen (Spieler, Fragen, Muscheln)</button>
   </div>
   <h2>Verbindung</h2>
   <div class="card" style="display:grid;gap:10px">
@@ -439,7 +439,7 @@ function mehrHTML(){
   <h2>Tastatur am Beamer-Laptop</h2>
   <div class="card help"><ul>
     <li><kbd>→</kbd>/<kbd>Leertaste</kbd> nächste Frage, <kbd>←</kbd> zurück</li>
-    <li><kbd>1</kbd>…<kbd>0</kbd> Perle für Spieler 1–10 (<kbd>Shift</kbd> = abziehen)</li>
+    <li><kbd>1</kbd>…<kbd>0</kbd> Muschel für Spieler 1–10 (<kbd>Shift</kbd> = abziehen)</li>
     <li><kbd>A</kbd> alle +1 · <kbd>K</kbd> Konfetti · <kbd>F</kbd> Vollbild</li>
     <li><kbd>S</kbd> Start · <kbd>G</kbd> Spielfeld · <kbd>B</kbd> Schatzkammer</li>
   </ul></div>`;
@@ -500,8 +500,8 @@ $('#main').addEventListener('click', async e=>{
     case 'up': send({type:'moveQuestion', id, dir:-1}); break;
     case 'down': send({type:'moveQuestion', id, dir:1}); break;
     case 'delq': if(confirm('Diese Frage wirklich löschen?')) send({type:'deleteQuestion', id}); break;
-    case 'resetpoints': if(confirm('Alle Perlen auf 0 setzen?')) send({type:'resetPoints'}); break;
-    case 'resetall': if(confirm('Wirklich ALLES löschen – Spieler, Bilder, Fragen und Perlen?')){ send({type:'resetAll'}); draft={image:null,text:''}; } break;
+    case 'resetpoints': if(confirm('Alle Muscheln auf 0 setzen?')) send({type:'resetPoints'}); break;
+    case 'resetall': if(confirm('Wirklich ALLES löschen – Spieler, Bilder, Fragen und Muscheln?')){ send({type:'resetAll'}); draft={image:null,text:''}; } break;
     case 'export': {
       const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);

@@ -10,7 +10,7 @@
 <style>
 :root{
   --deep:#062a5c; --mid:#0b61a8; --light:#2bb6e8; --sand:#f6d98b; --ink:#0d2346;
-  --card:#ffffff; --pearl:#fff6e6;
+  --card:#ffffff;
   --font:'Fredoka','Baloo 2','Comic Sans MS','Trebuchet MS',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -109,8 +109,7 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
 .pscore{display:flex;align-items:center;gap:.6vw;font-size:clamp(1.2rem,calc(var(--ah) * .34),5vh);font-weight:700;color:var(--c)}
 .pcount{filter:brightness(.8)}
 .col.right .pscore{justify-content:flex-end}
-.pearl{width:.9em;height:.9em;border-radius:50%;flex:0 0 auto;
-  background:radial-gradient(circle at 34% 30%,#fff 0 14%,#fff4dc 30%,#f2d6a6 70%,#d9b47a 100%);box-shadow:0 .2em .3em rgba(0,0,0,.18)}
+.shell{width:1em;height:1em;flex:0 0 auto;display:inline-block;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23ffe3ea%22/%3E%3Cstop offset=%22.55%22 stop-color=%22%23ffb3c4%22/%3E%3Cstop offset=%221%22 stop-color=%22%23ff8fa9%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d=%22M38 80 L62 80 L60 95 Q50 99 40 95 Z%22 fill=%22%23ff8fa9%22 stroke=%22%23e0647f%22 stroke-width=%222.5%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M50 86 C32 78 8 60 7 40 C6 30 10 24 16 23 C17 15 24 10 31 11 C35 5 44 3 50 6 C56 3 65 5 69 11 C76 10 83 15 84 23 C90 24 94 30 93 40 C92 60 68 78 50 86 Z%22 fill=%22url%28%23g%29%22 stroke=%22%23e0647f%22 stroke-width=%222.5%22 stroke-linejoin=%22round%22/%3E%3Cg stroke=%22%23e0647f%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 fill=%22none%22 opacity=%22.75%22%3E%3Cpath d=%22M50 84 L12 33%22/%3E%3Cpath d=%22M50 84 L22 20%22/%3E%3Cpath d=%22M50 84 L36 10%22/%3E%3Cpath d=%22M50 84 L50 8%22/%3E%3Cpath d=%22M50 84 L64 10%22/%3E%3Cpath d=%22M50 84 L78 20%22/%3E%3Cpath d=%22M50 84 L88 33%22/%3E%3C/g%3E%3Cellipse cx=%2234%22 cy=%2230%22 rx=%227%22 ry=%224%22 fill=%22%23fff%22 opacity=%22.7%22 transform=%22rotate%28-25 34 30%29%22/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 .12em .12em rgba(0,0,0,.2))}
 .pcount{display:inline-block;min-width:1.2em}
 .pcard.pop{animation:cardpop .7s cubic-bezier(.3,1.6,.5,1)}
 @keyframes cardpop{0%{scale:1}35%{scale:1.16}100%{scale:1}}
@@ -127,7 +126,7 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
 .b-title{font-size:8vh;font-weight:700;color:#fff;text-shadow:0 .5vh 0 #0a4d93,0 1.5vh 2.5vh rgba(0,0,0,.3)}
 .b-total{font-size:4vh;font-weight:600;color:#fff;text-shadow:0 .3vh .8vh rgba(0,0,0,.35);display:flex;align-items:center;gap:1vw}
 .b-total b{font-size:6vh;color:#fff3b0;min-width:2.5ch;text-align:center}
-.b-total .pearl{width:5vh;height:5vh}
+.b-total .shell{width:5vh;height:5vh}
 .b-row{flex:1;min-height:0;width:100%;display:flex;justify-content:center;align-items:flex-end;gap:1.6vw}
 .b-col{flex:0 1 13vw;display:flex;flex-direction:column;align-items:center;gap:1vh;height:100%;justify-content:flex-end;min-width:0}
 .b-col .avatar{--ah:10vh;box-shadow:0 0 0 .5vh var(--c),inset 0 0 0 .4vh rgba(255,255,255,.7)}
@@ -137,9 +136,9 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
   border:.5vh solid rgba(255,255,255,.75);border-top:0;box-shadow:inset 0 -1vh 2vh rgba(255,255,255,.2);overflow:hidden}
 .jar::before{content:"";position:absolute;top:0;left:-.5vh;right:-.5vh;height:2.2vh;background:var(--c);border-radius:1vh;z-index:2;box-shadow:0 .4vh 0 rgba(0,0,0,.15)}
 .jar-in{position:absolute;inset:3vh .8vh .8vh;display:flex;flex-wrap:wrap-reverse;align-content:flex-start;justify-content:center;gap:.3vh}
-.jar-in .pearl{width:var(--ps);height:var(--ps)}
-.jar-in .pearl.drop{animation:drop .7s cubic-bezier(.3,1.3,.6,1) both}
-@keyframes drop{from{transform:translateY(-55vh)}to{transform:none}}
+.jar-in .shell{width:var(--ps);height:var(--ps);transform:rotate(var(--rot,0deg))}
+.jar-in .shell.drop{animation:drop .7s cubic-bezier(.3,1.3,.6,1) both}
+@keyframes drop{from{transform:translateY(-55vh) rotate(var(--rot,0deg))}to{transform:rotate(var(--rot,0deg))}}
 .b-num{font-size:3.4vh;font-weight:700;color:#fff;display:flex;align-items:center;gap:.5vw}
 .badge{display:flex;align-items:center;gap:.4vw;background:#fff3b0;color:#7a4b00;font-weight:700;font-size:1.8vh;border-radius:99px;padding:.6vh 1vw;
   box-shadow:0 .5vh 1.2vh rgba(0,0,0,.25);transform:scale(0);transition:transform .6s cubic-bezier(.3,1.7,.5,1);white-space:nowrap}
@@ -150,8 +149,8 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
 
 /* ---------- Effekte */
 #fx{position:fixed;inset:0;z-index:40;pointer-events:none;overflow:hidden}
-.flypearl{position:fixed;left:0;top:0;width:7vh;height:7vh;margin:-3.5vh 0 0 -3.5vh;z-index:45}
-.flypearl .pearl{width:100%;height:100%;box-shadow:0 0 3vh 1vh rgba(255,246,220,.8)}
+.flyshell{position:fixed;left:0;top:0;width:7vh;height:7vh;margin:-3.5vh 0 0 -3.5vh;z-index:45}
+.flyshell .shell{width:100%;height:100%;filter:drop-shadow(0 0 1.5vh #fff) drop-shadow(0 0 3vh rgba(255,200,215,.9))}
 .confetti{position:fixed;left:0;top:0;width:1.3vh;height:1.9vh;border-radius:.3vh;z-index:44}
 #cheer{position:fixed;inset:0;z-index:42;display:grid;place-items:center;pointer-events:none;opacity:0}
 #cheer .cbg{position:absolute;inset:0;background:radial-gradient(circle,rgba(4,30,70,.55),rgba(4,30,70,.8))}
@@ -163,7 +162,7 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
 #cheer .avatar{--ah:34vh;box-shadow:0 0 0 1.2vh #fff,0 0 0 2.2vh var(--c),0 3vh 6vh rgba(0,0,0,.4)}
 #cheer .cmsg{font-size:8vh;font-weight:700;color:#fff;text-align:center;text-shadow:0 .6vh 0 rgba(0,0,0,.25),0 0 3vh rgba(0,0,0,.4);line-height:1.05;max-width:90vw}
 #cheer .cplus{display:flex;align-items:center;gap:1vw;font-size:5vh;font-weight:700;color:#fff3b0;text-shadow:0 .4vh 0 rgba(0,0,0,.25)}
-#cheer .cplus .pearl{width:6vh;height:6vh}
+#cheer .cplus .shell{width:6vh;height:6vh}
 #cheer .cgroup{display:flex;gap:1.5vw;flex-wrap:wrap;justify-content:center;max-width:80vw}
 #cheer .cgroup .avatar{--ah:15vh;box-shadow:0 0 0 .8vh #fff,0 0 0 1.4vh var(--c)}
 
@@ -208,7 +207,7 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
 <!-- Schatzkammer -->
 <section class="view" id="v-board">
   <div class="b-head"><div id="b-horse"></div><div class="b-title">Unsere Schatzkammer</div></div>
-  <div class="b-total">Gemeinsam gesammelt: <b id="b-total">0</b><span class="pearl"></span> Perlen</div>
+  <div class="b-total">Gemeinsam gesammelt: <b id="b-total">0</b><span class="shell"></span> Muscheln</div>
   <div class="b-row" id="b-row"></div>
   <div class="b-msg" id="b-msg"></div>
 </section>
@@ -425,7 +424,7 @@ function renderPlayers(){
       const t = k>1 ? idx/(k-1) - .5 : 0;
       const off = Math.pow(2*t,2) * 2;
       el.style.transform = `translateX(${left?'':'-'}${off.toFixed(2)}vw)`;
-      el.innerHTML = `<div class="av"></div><div class="pinfo"><div class="pname"></div><div class="pscore"><span class="pearl"></span><span class="pcount">0</span></div></div>`;
+      el.innerHTML = `<div class="av"></div><div class="pinfo"><div class="pname"></div><div class="pscore"><span class="shell"></span><span class="pcount">0</span></div></div>`;
       col.appendChild(el);
     });
   }
@@ -487,12 +486,12 @@ async function renderBoard(animate){
     <div class="b-col" style="--c:${p.color}" data-id="${p.id}">
       <div class="badge">${KS.seahorseSVG()}KI-Seepferdchen</div>
       <div class="jar"><div class="jar-in"></div></div>
-      <div class="b-num"><span class="pearl"></span><span class="n">${animate?0:p.points}</span></div>
+      <div class="b-num"><span class="shell"></span><span class="n">${animate?0:p.points}</span></div>
       ${avatarHTML(p)}
       <div class="b-name">${esc(p.name)}</div>
     </div>`).join('');
   const total = ps.reduce((s,p)=>s+p.points,0);
-  // Perlengröße so, dass das vollste Glas gerade passt
+  // Muschelgröße so, dass das vollste Glas gerade passt
   await sleep(animate ? 650 : 60);
   if(run !== boardRun) return;
   const jar = row.querySelector('.jar-in');
@@ -510,7 +509,7 @@ async function renderBoard(animate){
     $('#b-total').textContent = total;
     ps.forEach(p=>{
       const inn = row.querySelector(`.b-col[data-id="${p.id}"] .jar-in`);
-      inn.innerHTML = '<span class="pearl"></span>'.repeat(p.points);
+      inn.innerHTML = '<span class="shell"></span>'.repeat(p.points);
     });
     row.querySelectorAll('.badge').forEach(b=>b.classList.add('on'));
     msg.textContent = boardMessage(total); msg.classList.add('on');
@@ -526,7 +525,7 @@ async function renderBoard(animate){
       if(p.points > i){
         any = true;
         const col = row.querySelector(`.b-col[data-id="${p.id}"]`);
-        const pe = document.createElement('span'); pe.className='pearl drop';
+        const pe = document.createElement('span'); pe.className='shell drop'; pe.style.setProperty('--rot', ((Math.random()*30-15)|0)+'deg');
         pe.style.animationDelay = (Math.random()*80|0)+'ms';
         col.querySelector('.jar-in').appendChild(pe);
         col.querySelector('.n').textContent = i+1;
@@ -559,9 +558,10 @@ async function runQueue(){
   busy = false;
 }
 
-async function flyPearl(from, toEl){
+async function flyShell(from, toEl){
+  if(!$('#v-game').classList.contains('on')) return;
   const to = rectCenter(toEl);
-  const fp = document.createElement('div'); fp.className='flypearl'; fp.innerHTML='<span class="pearl"></span>';
+  const fp = document.createElement('div'); fp.className='flyshell'; fp.innerHTML='<span class="shell"></span>';
   $('#fx').appendChild(fp);
   const mx = (from.x+to.x)/2, my = Math.min(from.y,to.y) - innerHeight*.18;
   await fp.animate([
@@ -578,7 +578,7 @@ function landOn(card, p){
   cnt.textContent = shown;
   if(shown >= p.points) delete card.dataset.pending;
   cnt.classList.remove('bump'); void cnt.offsetWidth; cnt.classList.add('bump');
-  const c = rectCenter(card.querySelector('.pearl'));
+  const c = rectCenter(card.querySelector('.shell'));
   burst(c.x, c.y, 26, 14);
   const plus = document.createElement('div'); plus.className='plus'; plus.textContent='+1';
   $('#fx').appendChild(plus);
@@ -614,14 +614,14 @@ function awardPoint(pid, delta){
     let from = rectCenter($('#qcard'));
     if(big){
       sound('chime');
-      const html = `${avatarHTML(p)}<div class="cmsg">${pick(phrases)}, ${esc(p.name)}!</div><div class="cplus">+1 <span class="pearl"></span> Perle</div>`;
+      const html = `${avatarHTML(p)}<div class="cmsg">${pick(phrases)}, ${esc(p.name)}!</div><div class="cplus">+1 <span class="shell"></span> Muschel</div>`;
       const ch = showCheer(html, 1300);
       setTimeout(()=>{ const r = $('#cheer-box .avatar'); if(r){ const c = rectCenter(r); burst(c.x, c.y, 60, 30); } }, 350);
       await ch;
     } else sound('plop');
     const cardNow = document.querySelector(`.pcard[data-id="${pid}"]`);
     if(!cardNow) return;
-    await flyPearl(from, cardNow.querySelector('.pearl'));
+    await flyShell(from, cardNow.querySelector('.shell'));
     sound('plop');
     landOn(cardNow, state.players.find(x=>x.id===pid) || p);
   });
@@ -633,14 +633,14 @@ function awardAll(delta){
   ps.forEach(p=>{ const c=document.querySelector(`.pcard[data-id="${p.id}"]`); if(c) c.dataset.pending='1'; });
   enqueue(async ()=>{
     sound('fanfare');
-    const html = `<div class="cgroup">${ps.map(p=>avatarHTML(p)).join('')}</div><div class="cmsg">Toll gemacht, alle zusammen!</div><div class="cplus">+1 <span class="pearl"></span> für jeden</div>`;
+    const html = `<div class="cgroup">${ps.map(p=>avatarHTML(p)).join('')}</div><div class="cmsg">Toll gemacht, alle zusammen!</div><div class="cplus">+1 <span class="shell"></span> für jeden</div>`;
     const ch = showCheer(html, 1700);
     setTimeout(()=>rain(120), 300);
     await ch;
     const from = rectCenter($('#qcard'));
     await Promise.all(ps.map((p,i)=> sleep(i*90).then(async ()=>{
       const c = document.querySelector(`.pcard[data-id="${p.id}"]`); if(!c) return;
-      await flyPearl(from, c.querySelector('.pearl'));
+      await flyShell(from, c.querySelector('.shell'));
       landOn(c, state.players.find(x=>x.id===p.id));
     })));
     sound('chime');
@@ -680,6 +680,13 @@ function apply(action){
       const nowQ = state.questions[state.current] && state.questions[state.current].id;
       renderQuestion(nowQ!==prevQ || state.current!==prevCurrent);
       if(state.view !== prevView){
+        if(prevView==='game'){
+          // laufende Muschel-Animationen beenden, Zähler direkt aktualisieren
+          queue.length = 0;
+          document.querySelectorAll('#fx .flyshell, #fx .plus').forEach(e=>e.remove());
+          document.querySelectorAll('.pcard[data-pending]').forEach(c=>delete c.dataset.pending);
+          renderPlayers();
+        }
         setView(state.view);
         if(state.view==='board') renderBoard(true); else boardRun++;
         if(state.view==='game') sound('swoosh');

@@ -19,16 +19,16 @@ Ein kindgerechtes Brettspiel (8–10 Jahre) für den Beamer, gesteuert mit dem H
    - **Spieler**: Anzahl 1–10, Namen, Farbe, eigenes Foto/Logo (oder Meerestier).
    - **Fragen**: Bild hochladen + Text darunter. Reihenfolge ändern, bearbeiten, löschen.
    - **Spiel**: Start / Spielfeld / Schatzkammer umschalten, mit ◀ ▶ durch die Fragen blättern,
-     Spieler-Kachel antippen = **+1 Perle**, „Alle +1“, „Konfetti“.
-   - **Mehr**: Titel, Töne, Jubel-Animation, Sicherung herunterladen/laden, Perlen zurücksetzen.
+     Spieler-Kachel antippen = **+1 Muschel**, „Alle +1“, „Konfetti“.
+   - **Mehr**: Titel, Töne, Jubel-Animation, Sicherung herunterladen/laden, Muscheln zurücksetzen.
 
 ## Die drei Ansichten auf dem Beamer
 
 - **Start** – Titel, schwimmende Seepferdchen, alle Kinder mit Bild, QR-Code zum Verbinden.
-- **Spielfeld** – in der Mitte Bild + gut lesbarer Text, links und rechts die Kinder mit ihren Perlen.
-  Bei jeder Perle: Jubel mit Bild und Namen („Super gemacht, Lena!“), eine Perle fliegt zur Karte, Konfetti, Ton.
+- **Spielfeld** – in der Mitte Bild + gut lesbarer Text, links und rechts die Kinder mit ihren Muscheln.
+  Bei jeder Muschel: Jubel mit Bild und Namen („Super gemacht, Lena!“), eine Muschel fliegt zur Karte, Konfetti, Ton.
 - **Schatzkammer** (Abschluss) – bewusst **ohne Ranking**: Alle Kinder bleiben in ihrer festen Reihenfolge,
-  jede*r bekommt ein Glas, das sich Perle für Perle füllt. Groß angezeigt wird die **gemeinsam** gesammelte Zahl,
+  jede*r bekommt ein Glas, das sich Muschel für Muschel füllt. Groß angezeigt wird die **gemeinsam** gesammelte Zahl,
   und am Ende bekommen **alle gleichzeitig** das „KI-Seepferdchen“-Abzeichen.
 
 ## Gut zu wissen
@@ -40,7 +40,7 @@ Ein kindgerechtes Brettspiel (8–10 Jahre) für den Beamer, gesteuert mit dem H
   Das Handy speichert eine Kopie. Ist der Beamer leer (z. B. anderer Laptop), schickt das Handy beim Verbinden
   automatisch seine Fragen & Spieler hinüber. Man kann also **vorab auf dem Handy vorbereiten**.
 - **Bilder** werden auf dem Handy automatisch verkleinert, damit die Übertragung schnell geht.
-- **Notfall-Tastatur am Beamer-Laptop:** `→`/Leertaste weiter, `←` zurück, `1`…`0` Perle für Spieler 1–10
+- **Notfall-Tastatur am Beamer-Laptop:** `→`/Leertaste weiter, `←` zurück, `1`…`0` Muschel für Spieler 1–10
   (`Shift` = abziehen), `A` alle +1, `K` Konfetti, `S`/`G`/`B` Start/Spielfeld/Schatzkammer, `F` Vollbild.
 - **Testen an einem Rechner:** `beamer.html` und `steuerung.html?local=1` im selben Browser in zwei Fenstern öffnen.
 
