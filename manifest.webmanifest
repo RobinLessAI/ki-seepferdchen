@@ -1,0 +1,13 @@
+{
+  "name": "KI-Seepferdchen Steuerung",
+  "short_name": "Seepferdchen",
+  "start_url": "steuerung.html",
+  "display": "standalone",
+  "background_color": "#f2f9ff",
+  "theme_color": "#0b61a8",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
