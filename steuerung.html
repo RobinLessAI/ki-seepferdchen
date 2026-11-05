@@ -329,6 +329,7 @@ function spielHTML(){
   <div class="card">
     ${q ? `<div class="qprev"><div class="qthumb">${q.image?`<img src="${q.image}" alt="">`:'💬'}</div><div class="qtxt grow">${esc(q.text)||'<span class="muted">(ohne Text)</span>'}</div></div>`
         : `<div class="empty">Noch keine Fragen. <button class="linkbtn" data-act="tab" data-t="fragen">Jetzt anlegen →</button></div>`}
+    <button class="btn block ${state.focus?'primary':''}" style="margin-top:12px" data-act="focus">${state.focus?'🔍 Bild groß: AN – Spieler wieder zeigen':'🔍 Bild groß anzeigen (ohne Spieler)'}</button>
     <div class="navbtns">
       <button class="btn big" data-act="step" data-d="-1" ${state.current<=0?'disabled':''}>◀</button>
       <button class="btn primary big" data-act="step" data-d="1" ${state.current>=qs.length-1?'disabled':''}>Weiter ▶</button>
@@ -456,7 +457,7 @@ function mehrHTML(){
   <div class="card help"><ul>
     <li><kbd>→</kbd>/<kbd>Leertaste</kbd> nächste Frage, <kbd>←</kbd> zurück</li>
     <li><kbd>1</kbd>…<kbd>0</kbd> Muschel für Spieler 1–10 (<kbd>Shift</kbd> = abziehen)</li>
-    <li><kbd>A</kbd> alle +1 · <kbd>K</kbd> Konfetti · <kbd>F</kbd> Vollbild</li>
+    <li><kbd>A</kbd> alle +1 · <kbd>K</kbd> Konfetti · <kbd>F</kbd> Vollbild · <kbd>V</kbd> Bild groß an/aus</li>
     <li><kbd>S</kbd> Start · <kbd>G</kbd> Spielfeld · <kbd>B</kbd> Schatzkammer</li>
   </ul></div>`;
 }
@@ -491,6 +492,7 @@ $('#main').addEventListener('click', async e=>{
     }
     case 'all': send({type:'pointsAll', delta:1}); try{ navigator.vibrate && navigator.vibrate([20,40,20]); }catch(_){} break;
     case 'celebrate': send({type:'celebrate'}); break;
+    case 'focus': send({type:'setFocus', on: !state.focus}); if(state.view!=='game') send({type:'setView', view:'game'}); break;
     case 'count': send({type:'setPlayerCount', n: state.playerCount + (+el.dataset.d)}); break;
     case 'avatar': { const img = await pickImage(800, {trim:true}); if(img) send({type:'updatePlayer', id, patch:{avatar:img, fit:'cover'}}); break; }
     case 'fit': send({type:'updatePlayer', id, patch:{fit: el.dataset.f}}); break;

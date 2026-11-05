@@ -72,8 +72,15 @@ body{font-family:var(--font);color:var(--ink);background:var(--deep);user-select
 #startbtn.hide{display:none}
 
 /* ---------- Spielfeld */
-#v-game{display:grid;grid-template-columns:23vw 1fr 23vw;padding:2.5vh 1.2vw 3vh}
-.col{display:flex;flex-direction:column;justify-content:center;gap:2vh;position:relative}
+#v-game{display:grid;grid-template-columns:23vw 1fr 23vw;padding:2.5vh 1.2vw 3vh;transition:grid-template-columns .7s cubic-bezier(.4,0,.2,1),padding .7s}
+.col{display:flex;flex-direction:column;justify-content:center;gap:2vh;position:relative;transition:opacity .45s,transform .7s cubic-bezier(.4,0,.2,1)}
+/* Bild groß: Spieler gleiten zur Seite, die Frage nutzt die ganze Breite */
+#v-game.focus{grid-template-columns:0vw 1fr 0vw;padding:2vh 2.5vw 2.5vh}
+#v-game.focus .col{opacity:0;pointer-events:none}
+#v-game.focus .col.left{transform:translateX(-30vw)}
+#v-game.focus .col.right{transform:translateX(30vw)}
+#v-game.focus .s-head{min-height:0;height:0;margin:0;opacity:0;overflow:hidden}
+.s-head{transition:opacity .4s}
 .col.left{align-items:flex-start}.col.right{align-items:flex-end}
 .stage{display:flex;flex-direction:column;align-items:center;min-height:0;padding:0 1vw}
 .s-head{display:flex;align-items:center;gap:1vw;color:#fff;font-weight:700;font-size:3vh;text-shadow:0 .3vh .8vh rgba(0,0,0,.35);margin-bottom:1.2vh;min-height:5vh}
@@ -598,6 +605,19 @@ async function showCheer(html, ms){
   await a1.finished; ch.style.opacity = 0; box.innerHTML='';
 }
 
+function applyFocus(){
+  const g = $('#v-game');
+  if(g.classList.contains('focus') === !!state.focus) return;
+  g.classList.toggle('focus', !!state.focus);
+  // nach dem Umbau Text neu einpassen
+  setTimeout(()=>{ shownQ = {}; renderQuestion(false); }, 750);
+}
+function landQuiet(card, p){
+  if(!card) return;
+  delete card.dataset.pending;
+  card.querySelector('.pcount').textContent = p.points;
+}
+
 function awardPoint(pid, delta){
   const p = state.players.find(x=>x.id===pid);
   const card = document.querySelector(`.pcard[data-id="${pid}"]`);
@@ -621,6 +641,7 @@ function awardPoint(pid, delta){
     } else sound('plop');
     const cardNow = document.querySelector(`.pcard[data-id="${pid}"]`);
     if(!cardNow) return;
+    if(state.focus){ landQuiet(cardNow, state.players.find(x=>x.id===pid) || p); return; }
     await flyShell(from, cardNow.querySelector('.shell'));
     sound('plop');
     landOn(cardNow, state.players.find(x=>x.id===pid) || p);
@@ -637,6 +658,7 @@ function awardAll(delta){
     const ch = showCheer(html, 1700);
     setTimeout(()=>rain(120), 300);
     await ch;
+    if(state.focus){ ps.forEach(p=>landQuiet(document.querySelector(`.pcard[data-id="${p.id}"]`), state.players.find(x=>x.id===p.id))); sound('chime'); return; }
     const from = rectCenter($('#qcard'));
     await Promise.all(ps.map((p,i)=> sleep(i*90).then(async ()=>{
       const c = document.querySelector(`.pcard[data-id="${p.id}"]`); if(!c) return;
@@ -658,6 +680,7 @@ function celebrate(){
 /* ================================================= Zustand anwenden */
 function renderAll(){
   setView(state.view);
+  applyFocus();
   renderTitle();
   renderPlayers();
   renderQuestion(false);
@@ -676,6 +699,7 @@ function apply(action){
     case 'replaceState': case 'resetAll':
       layoutKey=''; shownQ={}; queue.length=0; renderAll(); break;
     default: {
+      applyFocus();
       renderPlayers(); renderTitle();
       const nowQ = state.questions[state.current] && state.questions[state.current].id;
       renderQuestion(nowQ!==prevQ || state.current!==prevCurrent);
@@ -736,6 +760,7 @@ addEventListener('keydown', e=>{
   else if(k==='b' || k==='B'){ apply({type:'setView',view:'board'}); }
   else if(k==='a' || k==='A'){ apply({type:'pointsAll',delta:1}); }
   else if(k==='k' || k==='K'){ apply({type:'celebrate'}); }
+  else if(k==='v' || k==='V'){ apply({type:'setFocus', on: !state.focus}); }
   else if(/^[0-9]$/.test(k)){
     const i = k==='0' ? 9 : (+k-1);
     const p = KS.activePlayers(state)[i];

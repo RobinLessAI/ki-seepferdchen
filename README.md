@@ -19,6 +19,7 @@ Ein kindgerechtes Brettspiel (8–10 Jahre) für den Beamer, gesteuert mit dem H
    - **Spieler**: Anzahl 1–10, Namen, Farbe, eigenes Foto/Logo (oder Meerestier).
    - **Fragen**: Bild hochladen + Text darunter. Reihenfolge ändern, bearbeiten, löschen.
    - **Spiel**: Start / Spielfeld / Schatzkammer umschalten, mit ◀ ▶ durch die Fragen blättern,
+     „🔍 Bild groß“ zeigt die Frage ohne Spieler über die ganze Breite,
      Spieler-Kachel antippen = **+1 Muschel**, „Alle +1“, „Konfetti“.
    - **Mehr**: Titel, Töne, Jubel-Animation, Sicherung herunterladen/laden, Muscheln zurücksetzen.
 
@@ -52,7 +53,7 @@ Ein kindgerechtes Brettspiel (8–10 Jahre) für den Beamer, gesteuert mit dem H
   automatisch seine Fragen & Spieler hinüber. Man kann also **vorab auf dem Handy vorbereiten**.
 - **Bilder** werden auf dem Handy automatisch verkleinert, damit die Übertragung schnell geht.
 - **Notfall-Tastatur am Beamer-Laptop:** `→`/Leertaste weiter, `←` zurück, `1`…`0` Muschel für Spieler 1–10
-  (`Shift` = abziehen), `A` alle +1, `K` Konfetti, `S`/`G`/`B` Start/Spielfeld/Schatzkammer, `F` Vollbild.
+  (`Shift` = abziehen), `A` alle +1, `K` Konfetti, `V` Bild groß an/aus, `S`/`G`/`B` Start/Spielfeld/Schatzkammer, `F` Vollbild.
 - **Testen an einem Rechner:** `beamer.html` und `steuerung.html?local=1` im selben Browser in zwei Fenstern öffnen.
 
 Verwendete Bibliotheken (lokal in `js/vendor/`, MIT-Lizenz): [PeerJS](https://peerjs.com) 1.5.4,

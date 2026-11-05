@@ -44,6 +44,7 @@
       questions: [],
       current: 0,
       view: 'title',
+      focus: false,
       settings: { sound: true, celebration: true }
     };
   }
@@ -73,6 +74,7 @@
     s.playerCount = clamp(Number(input.playerCount) || 4, 1, MAX_PLAYERS);
     s.current = clamp(Number(input.current) || 0, 0, Math.max(0, s.questions.length - 1));
     s.view = VIEWS.includes(input.view) ? input.view : 'title';
+    s.focus = !!input.focus;
     return s;
   }
 
@@ -145,6 +147,9 @@
         break;
       case 'step':
         s.current = clamp(s.current + (a.delta | 0), 0, Math.max(0, s.questions.length - 1));
+        break;
+      case 'setFocus':
+        s.focus = !!a.on;
         break;
       case 'setView':
         if (VIEWS.includes(a.view)) s.view = a.view;
