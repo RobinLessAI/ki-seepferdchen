@@ -53,7 +53,7 @@ Ein kindgerechtes Brettspiel (8–10 Jahre) für den Beamer, gesteuert mit dem H
   automatisch seine Fragen & Spieler hinüber. Man kann also **vorab auf dem Handy vorbereiten**.
 - **Bilder** werden auf dem Handy automatisch verkleinert, damit die Übertragung schnell geht.
 - **Notfall-Tastatur am Beamer-Laptop:** `→`/Leertaste weiter, `←` zurück, `1`…`0` Muschel für Spieler 1–10
-  (`Shift` = abziehen), `A` alle +1, `K` Konfetti, `V` Bild groß an/aus, `S`/`G`/`B` Start/Spielfeld/Schatzkammer, `F` Vollbild.
+  (`Shift` = abziehen), `A` alle +1, `K` Konfetti, `V` Bild groß an/aus, `Q` QR-Code zum Verbinden, `S`/`G`/`B` Start/Spielfeld/Schatzkammer, `F` Vollbild.
 - **Testen an einem Rechner:** `beamer.html` und `steuerung.html?local=1` im selben Browser in zwei Fenstern öffnen.
 
 Verwendete Bibliotheken (lokal in `js/vendor/`, MIT-Lizenz): [PeerJS](https://peerjs.com) 1.5.4,
