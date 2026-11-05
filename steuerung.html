@@ -64,9 +64,15 @@ nav button.on{background:var(--sky);color:var(--blue)}
 
 /* aktuelle Frage */
 .qprev{display:flex;gap:12px;align-items:center}
-.qthumb{width:84px;height:64px;border-radius:12px;background:#eaf6ff center/cover no-repeat;flex:0 0 auto;display:grid;place-items:center;font-size:26px;overflow:hidden}
+.qcount{margin:-2px 0 14px}
+.qnum{font-size:24px;font-weight:700;color:var(--deep);line-height:1.1}
+.qnum b{font-size:40px;color:var(--blue)}
+.qnum span{color:var(--muted)}
+.qbar{height:10px;border-radius:99px;background:var(--sky);margin-top:8px;overflow:hidden}
+.qbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#4fb3ef,#0b61a8);transition:width .4s}
+.qthumb{width:96px;height:72px;border-radius:12px;background:#eaf6ff center/cover no-repeat;flex:0 0 auto;display:grid;place-items:center;font-size:26px;overflow:hidden}
 .qthumb img{width:100%;height:100%;object-fit:cover}
-.qtxt{font-weight:600;font-size:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.qtxt{font-weight:600;font-size:17px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .navbtns{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;margin-top:12px}
 
 /* Spieler-Kacheln */
@@ -325,8 +331,12 @@ function spielHTML(){
     ${[['title','🏠 Start'],['game','🎲 Spielfeld'],['board','💎 Schatzkammer']].map(([v,l])=>`<button data-act="view" data-v="${v}" class="${state.view===v?'on':''}">${l}</button>`).join('')}
   </div>
 
-  <h2>Auf dem Beamer ${qs.length?`<span class="muted">· Frage ${state.current+1} von ${qs.length}</span>`:''}</h2>
+  <h2>Auf dem Beamer</h2>
   <div class="card">
+    ${qs.length ? `<div class="qcount">
+      <div class="qnum">Frage <b>${state.current+1}</b> <span>von ${qs.length}</span></div>
+      <div class="qbar"><i style="width:${Math.round((state.current+1)/qs.length*100)}%"></i></div>
+    </div>` : ''}
     ${q ? `<div class="qprev"><div class="qthumb">${q.image?`<img src="${q.image}" alt="">`:'💬'}</div><div class="qtxt grow">${esc(q.text)||'<span class="muted">(ohne Text)</span>'}</div></div>`
         : `<div class="empty">Noch keine Fragen. <button class="linkbtn" data-act="tab" data-t="fragen">Jetzt anlegen →</button></div>`}
     <button class="btn block ${state.focus?'primary':''}" style="margin-top:12px" data-act="focus">${state.focus?'🔍 Bild groß: AN – Spieler wieder zeigen':'🔍 Bild groß anzeigen (ohne Spieler)'}</button>
